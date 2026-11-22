@@ -225,3 +225,57 @@ TEST(NetworkGame, ClientSeesHostLeave)
 	EXPECT_FALSE(clientCtx.IsWorldActive());
 	EXPECT_EQ(Net::DisconnectReason::HostLeft, client->GetDisconnectReason());
 }
+
+TEST(NetworkGame, LeaverTankIsDestroyedAndNeverRespawns)
+{
+	Plat::ConsoleBuffer logger(200, 500);
+	auto fs = MakeDataFileSystem();
+	MapCollection maps(*fs);
+
+	auto host = std::make_shared<Net::HostSession>(c_port + 2, Net::NetPlayerDesc{ "host", "red", "default", 0 }, logger);
+	auto client = std::make_shared<Net::ClientSession>("127.0.0.1", c_port + 2, Net::NetPlayerDesc{ "guest", "blue", "default", 0 }, logger);
+	ASSERT_TRUE(PumpUntil(*host, *client, [&] { return client->GetState() == Net::ClientSession::State::InLobby; }));
+	host->SetMap(c_mapName, 0);
+
+	StartCatcher catcher;
+	client->SetHandler(&catcher);
+	Net::StartGameMsg startMsg = host->StartGame(5, c_tickRate, c_inputDelay, false);
+	ASSERT_TRUE(PumpUntil(*host, *client, [&] { return catcher.started; }));
+
+	NetworkGameContext hostCtx(maps.ExtractCachedWorld(*fs, c_mapName), MakeDMSettings(startMsg.lobby), startMsg.seed, host, 0, c_tickRate, c_inputDelay, false, logger);
+	auto clientCtx = std::make_unique<NetworkGameContext>(maps.ExtractCachedWorld(*fs, c_mapName), MakeDMSettings(catcher.msg.lobby), catcher.msg.seed, client, 1, c_tickRate, c_inputDelay, false, logger);
+
+	AppConfig appConfig;
+	bool configChanged = false;
+	auto guest = hostCtx.GetDMPlayer(1);
+	ASSERT_TRUE(guest);
+
+	// run until the guest has a tank (respawn delay is 2 s)
+	auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(30);
+	while (!guest->GetVehicle())
+	{
+		ASSERT_LT(std::chrono::steady_clock::now(), deadline);
+		hostCtx.Step(c_dt, appConfig, &configChanged);
+		clientCtx->Step(c_dt, appConfig, &configChanged);
+		std::this_thread::sleep_for(std::chrono::microseconds(200));
+	}
+
+	// the guest leaves; the host must keep going without them
+	clientCtx.reset();
+	client.reset();
+
+	uint32_t tickAtLeave = hostCtx.GetTick();
+	deadline = std::chrono::steady_clock::now() + std::chrono::seconds(30);
+	while (hostCtx.GetTick() < tickAtLeave + 600) // 10 more seconds, enough for a respawn attempt
+	{
+		ASSERT_LT(std::chrono::steady_clock::now(), deadline);
+		hostCtx.Step(c_dt, appConfig, &configChanged);
+		std::this_thread::sleep_for(std::chrono::microseconds(200));
+	}
+
+	EXPECT_TRUE(guest->GetIsDeparted());
+	EXPECT_EQ(nullptr, guest->GetVehicle());
+	EXPECT_EQ(1, guest->GetNumDeaths());
+	EXPECT_TRUE(LogContains(logger, "left the game"));
+	EXPECT_FALSE(hostCtx.IsConnectionLost());
+}

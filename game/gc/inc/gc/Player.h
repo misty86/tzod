@@ -10,7 +10,8 @@ class GC_Vehicle;
 
 #define GC_FLAG_PLAYER_ISHUMAN     (GC_FLAG_SERVICE_ << 0)
 #define GC_FLAG_PLAYER_ISACTIVE    (GC_FLAG_SERVICE_ << 1)
-#define GC_FLAG_PLAYER_            (GC_FLAG_SERVICE_ << 2)
+#define GC_FLAG_PLAYER_ISDEPARTED  (GC_FLAG_SERVICE_ << 2) // left the game; never respawns again
+#define GC_FLAG_PLAYER_            (GC_FLAG_SERVICE_ << 3)
 
 class GC_Player : public GC_Service
 {
@@ -50,6 +51,9 @@ public:
 
 	void SetIsActive(bool isActive) { SetFlags(GC_FLAG_PLAYER_ISACTIVE, isActive); }
 	bool GetIsActive() const { return CheckFlags(GC_FLAG_PLAYER_ISACTIVE); }
+
+	void SetIsDeparted(bool isDeparted) { SetFlags(GC_FLAG_PLAYER_ISDEPARTED, isDeparted); }
+	bool GetIsDeparted() const { return CheckFlags(GC_FLAG_PLAYER_ISDEPARTED); }
 
 	// GC_Object
 	void Kill(World &world) override;

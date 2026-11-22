@@ -162,6 +162,9 @@ void GC_Player::Resume(World &world)
 {
 	assert(!GetVehicle());
 
+	if (GetIsDeparted())
+		return; // the player is gone, no more tanks for them
+
 	if (GC_SpawnPoint *pBestPoint = SelectRespawnPoint(world, _team))
 	{
 		world.New<GC_Text_ToolTip>(pBestPoint->GetPos(), _nick, GC_Text::DEFAULT);

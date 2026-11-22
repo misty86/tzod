@@ -267,10 +267,26 @@ void NetworkGameContext::ApplyBatch(const Net::InputBatchMsg &batch)
 	}
 	GetWorldController().SendControllerStates(std::move(states));
 
+	// players who left: blow up their tank and make sure they never respawn.
+	// This runs on every peer at the same tick, so the world stays in sync.
 	for (unsigned i = 0; i < 32 && i < _numHumans; ++i)
 	{
-		if (batch.leftMask & (1u << i))
-			Announce(GetPlayerNick(i) + " left the game");
+		if (0 == (batch.leftMask & (1u << i)))
+			continue;
+
+		Announce(GetPlayerNick(i) + " left the game");
+		if (auto player = GetDMPlayer(i))
+		{
+			player->SetIsDeparted(true);
+			if (auto vehicle = player->GetVehicle())
+			{
+				DamageDesc dd;
+				dd.damage = vehicle->GetHealth();
+				dd.hit = vehicle->GetPos();
+				dd.from = nullptr;
+				vehicle->Destroy(GetWorld(), dd);
+			}
+		}
 	}
 }
 
