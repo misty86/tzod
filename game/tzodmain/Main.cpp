@@ -57,6 +57,7 @@ try
 	// --autostart <sec>   ...and start it after the given number of seconds
 	// --join <host[:port]> join a network game right away
 	// --netchecksum       verify the world checksum every tick (desync detection)
+	// --latency <ticks>   input delay for the game you host (default 3; raise to 6-10 over the internet)
 	const char *userFolder = "Tank Zone of Death";
 	const char *logFile = "log.txt";
 	TzodViewOptions viewOptions;
@@ -79,6 +80,8 @@ try
 			viewOptions.joinAddress = argv[++i];
 		else if (0 == strcmp(argv[i], "--netchecksum"))
 			viewOptions.netDebugChecksum = true;
+		else if (0 == strcmp(argv[i], "--latency") && hasValue)
+			viewOptions.netInputDelay = atoi(argv[++i]);
 	}
 
 	s_logger.SetLog(new ConsoleLog(logFile));

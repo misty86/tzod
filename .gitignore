@@ -45,3 +45,4 @@ Android/local.properties
 # local cmake build
 /build/
 /build-release/
+/dist/

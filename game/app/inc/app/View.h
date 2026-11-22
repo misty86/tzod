@@ -26,6 +26,7 @@ struct TzodViewOptions
 	float autoStartDelay = 0;     // ...and start it after this many seconds
 	std::string joinAddress;      // join a network game at host[:port]
 	bool netDebugChecksum = false; // turn on the per-tick world checksum verification
+	int netInputDelay = -1;       // override sv_latency (input delay in ticks) when >= 0
 };
 
 class TzodView final

@@ -28,6 +28,8 @@ static TzodApp& ApplyOptions(TzodApp &app, const TzodViewOptions &options)
 {
 	if (options.netDebugChecksum)
 		app.GetShellConfig().net_debugchecksum.Set(true);
+	if (options.netInputDelay >= 0)
+		app.GetShellConfig().sv_latency.SetInt(options.netInputDelay);
 	return app;
 }
 
