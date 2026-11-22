@@ -303,6 +303,7 @@ void JoinGameDlg::OnTimeStep(const Plat::Input &input, bool focused, float dt)
 
 void JoinGameDlg::Connect(std::string address)
 {
+	_logger.Printf(0, "net: JoinGameDlg::Connect(%s)", address.c_str());
 	_address->GetEditable().SetText(std::move(address));
 	OnConnect();
 }
