@@ -45,6 +45,11 @@ public:
 	IRender& GetRender();
 	void Present();
 	bool ShouldClose() const;
+
+	void SetFullscreen(bool fullscreen);
+	bool IsFullscreen() const;
+	void SetVSync(bool vsync);
+	bool GetVSync() const { return _vsync; }
 	int _windowedTop = 0;
 	int _windowedLeft = 0;
 	int _windowedWidth = 0;
@@ -72,4 +77,5 @@ private:
 	std::unique_ptr<GlfwInput> _input;
 	std::unique_ptr<RenderOpenGL> _render;
 	std::unique_ptr<RenderBinding> _renderBinding;
+	bool _vsync = true;
 };

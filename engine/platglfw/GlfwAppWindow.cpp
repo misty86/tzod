@@ -157,20 +157,7 @@ static void OnKey(GLFWwindow *window, int platformKey, int scancode, int platfor
 	{
 		if (!!(mods & GLFW_MOD_ALT) && GLFW_KEY_ENTER == platformKey && GLFW_PRESS == platformAction)
 		{
-			if (GLFWmonitor * monitor = glfwGetWindowMonitor(window) ? nullptr : GetCurrentMonitor(window))
-			{
-				glfwGetWindowSize(window, &self->_windowedWidth, &self->_windowedHeight);
-				glfwGetWindowPos(window, &self->_windowedLeft, &self->_windowedTop);
-				glfwSetWindowMonitor(window, monitor, 0, 0,
-					glfwGetVideoMode(monitor)->width, glfwGetVideoMode(monitor)->height, GLFW_DONT_CARE);
-				glfwSwapInterval(1);
-			}
-			else
-			{
-				glfwSetWindowMonitor(window, nullptr,
-					self->_windowedLeft, self->_windowedTop,
-					self->_windowedWidth, self->_windowedHeight, GLFW_DONT_CARE);
-			}
+			self->SetFullscreen(!self->IsFullscreen());
 		}
 		else
 		{
@@ -333,4 +320,38 @@ void GlfwAppWindow::PollEvents(Plat::AppWindowInputSink& inputSink) // static
 	s_inputSink = &inputSink;
 	glfwPollEvents();
 	s_inputSink = nullptr;
+}
+
+bool GlfwAppWindow::IsFullscreen() const
+{
+	return nullptr != glfwGetWindowMonitor(_window.get());
+}
+
+void GlfwAppWindow::SetFullscreen(bool fullscreen)
+{
+	if (fullscreen == IsFullscreen())
+		return;
+
+	if (fullscreen)
+	{
+		GLFWmonitor *monitor = GetCurrentMonitor(_window.get());
+		glfwGetWindowSize(_window.get(), &_windowedWidth, &_windowedHeight);
+		glfwGetWindowPos(_window.get(), &_windowedLeft, &_windowedTop);
+		glfwSetWindowMonitor(_window.get(), monitor, 0, 0,
+			glfwGetVideoMode(monitor)->width, glfwGetVideoMode(monitor)->height, GLFW_DONT_CARE);
+	}
+	else
+	{
+		glfwSetWindowMonitor(_window.get(), nullptr,
+			_windowedLeft, _windowedTop,
+			_windowedWidth, _windowedHeight, GLFW_DONT_CARE);
+	}
+	// the swap interval is per context and may be reset by the mode switch
+	glfwSwapInterval(_vsync ? 1 : 0);
+}
+
+void GlfwAppWindow::SetVSync(bool vsync)
+{
+	_vsync = vsync;
+	glfwSwapInterval(_vsync ? 1 : 0);
 }

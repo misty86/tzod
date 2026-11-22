@@ -26,6 +26,7 @@ class DMCampaign;
 struct TzodDisplaySettings
 {
 	bool fullscreen = false;
+	bool vsync = true;
 	int width = 1024;
 	int height = 768;
 };
@@ -44,6 +45,7 @@ public:
 	LangCache& GetLang();
 	DMCampaign &GetDMCampaign();
 	TzodDisplaySettings GetDisplaySettings() const;
+	void SetFullscreen(bool fullscreen); // remembers a switch made with Alt+Enter
 
 	void Step(float dt);
 	void SaveConfig();

@@ -111,9 +111,15 @@ TzodDisplaySettings TzodApp::GetDisplaySettings() const
 {
 	TzodDisplaySettings result;
 	result.fullscreen = _impl->combinedConfig.shell.r_fullscreen.Get();
+	result.vsync = _impl->combinedConfig.shell.r_vsync.Get();
 	result.width = std::max(320, _impl->combinedConfig.shell.r_width.GetInt());
 	result.height = std::max(240, _impl->combinedConfig.shell.r_height.GetInt());
 	return result;
+}
+
+void TzodApp::SetFullscreen(bool fullscreen)
+{
+	_impl->combinedConfig.shell.r_fullscreen.Set(fullscreen);
 }
 
 void TzodApp::Step(float dt)

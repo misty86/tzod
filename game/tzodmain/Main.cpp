@@ -94,8 +94,9 @@ try
 	TzodApp app(*fs, s_logger);
 
 	s_logger.Printf(0, "Creating GL context");
-	auto display = app.GetDisplaySettings(); // r_fullscreen, r_width, r_height; Alt+Enter toggles at run time
+	TzodDisplaySettings display = app.GetDisplaySettings(); // r_fullscreen, r_width, r_height, r_vsync
 	GlfwAppWindow appWindow(TZOD_VERSION, display.fullscreen, display.width, display.height);
+	appWindow.SetVSync(display.vsync);
 
 	TzodView view(*fs, s_logger, app, appWindow.CmdClose(), std::move(viewOptions));
 	Timer timer;
@@ -106,6 +107,17 @@ try
 		appWindow.Present();
 		GlfwAppWindow::PollEvents(view.GetAppWindowInputSink());
 		view.Step(app, timer.GetDt(), appWindow.GetInput());
+
+		// keep the window and the display settings in sync: the settings menu changes the config,
+		// Alt+Enter changes the window
+		TzodDisplaySettings current = app.GetDisplaySettings();
+		if (current.fullscreen != display.fullscreen)
+			appWindow.SetFullscreen(current.fullscreen);
+		else if (appWindow.IsFullscreen() != current.fullscreen)
+			app.SetFullscreen(appWindow.IsFullscreen());
+		if (current.vsync != display.vsync)
+			appWindow.SetVSync(current.vsync);
+		display = app.GetDisplaySettings();
 	} while (!appWindow.ShouldClose());
 
 	app.SaveConfig();
