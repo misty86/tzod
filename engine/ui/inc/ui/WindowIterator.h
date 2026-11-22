@@ -56,7 +56,7 @@ namespace UI
 		: public detail::ReferenceTypeHelper<IsShared, IsConst>
 	{
 	public:
-		using value_type = void;
+		using value_type = typename detail::ReferenceTypeHelper<IsShared, IsConst>::reference; // what operator* yields
 		using pointer = typename detail::ReferenceTypeHelper<IsShared, IsConst>::pointer;
 		using reference = typename detail::ReferenceTypeHelper<IsShared, IsConst>::reference;
 		using difference_type = int;

@@ -41,3 +41,7 @@ Android/build/
 Android/local.properties
 *.iml
 .cxx
+
+# local cmake build
+/build/
+/build-release/

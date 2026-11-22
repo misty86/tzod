@@ -1,6 +1,7 @@
 #pragma once
 #include <luaetc/LuaDeleter.h>
 #include <memory>
+#include <string>
 #include <string_view>
 
 namespace Plat
