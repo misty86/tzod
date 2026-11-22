@@ -548,4 +548,5 @@ AdvancedSettings::AdvancedSettings(ShellConfig& conf, LangCache& lang)
 	AddSetting<BooleanSetting>(lang.settings_advanced_fullscreen, conf.r_fullscreen);
 	AddSetting<BooleanSetting>(lang.settings_advanced_vsync, conf.r_vsync);
 	AddSetting<BooleanSetting>(lang.settings_advanced_framestats, conf.d_showfps);
+	AddSetting<PercentSetting>(lang.settings_sfx_volume, conf.s_volume);
 }

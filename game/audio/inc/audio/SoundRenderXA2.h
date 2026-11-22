@@ -33,6 +33,7 @@ public:
 	void LoadBuffer(SoundTemplate st, const void *data, size_t size, FormatDesc format) override;
 	void PlayOnce(SoundTemplate st, vec2d pos) override;
 	void SetListenerPos(vec2d pos) override;
+	void SetMasterVolume(float volume) override;
 	void Step() override;
 
 private:

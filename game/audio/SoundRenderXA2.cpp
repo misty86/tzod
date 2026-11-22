@@ -107,6 +107,11 @@ void SoundRenderXA2::SetListenerPos(vec2d pos)
 	// TODO: implement
 }
 
+void SoundRenderXA2::SetMasterVolume(float volume)
+{
+	_masteringVoice->SetVolume(volume, OPSETID);
+}
+
 static std::unique_ptr<IXAudio2SourceVoice, VoiceDeleter> CreateVoice(Plat::ConsoleBuffer &logger, IXAudio2 *xa2, const WAVEFORMATEX &fmt)
 {
 	std::unique_ptr<IXAudio2SourceVoice, VoiceDeleter> result;

@@ -98,6 +98,15 @@ catch (const std::exception &e)
 	logger.Format(1) << "Could not load '" << fileName << ".wav' - " << e.what();
 }
 
+void SoundView::SetVolume(float volume)
+{
+	if (volume != _volume)
+	{
+		_volume = volume;
+		_soundRender->SetMasterVolume(volume);
+	}
+}
+
 void SoundView::Step(vec2d listenerPos)
 {
 	_soundRender->SetListenerPos(listenerPos);

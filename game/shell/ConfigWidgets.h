@@ -87,3 +87,24 @@ private:
 	std::shared_ptr<KeyBindSettingContent> _content;
 	bool _waitingForKey = false;
 };
+
+// Integer config value in 0..10000 shown as a percentage; Left/Right or click change it in 10% steps
+class PercentSetting final
+	: public UI::Window
+{
+	TUPLE_CHILDREN(UI::ContentButton);
+    STATIC_FOCUS(0);
+
+public:
+	PercentSetting(ConfVarNumber& numberVar);
+	void SetTitle(std::shared_ptr<UI::LayoutData<std::string_view>> title);
+
+	// UI::Window
+	UI::WindowLayout GetChildLayout(TextureManager& texman, const UI::LayoutContext& lc, const UI::DataContext& dc, const UI::Window& child) const override;
+	vec2d GetContentSize(TextureManager& texman, const UI::DataContext& dc, float scale, const UI::LayoutConstraints& layoutConstraints) const override;
+
+private:
+	class Content;
+	ConfVarNumber& _numberVar;
+	std::shared_ptr<Content> _content;
+};

@@ -20,6 +20,7 @@ struct SoundRender
 	virtual void LoadBuffer(SoundTemplate st, const void *data, size_t size, FormatDesc format) = 0;
 	virtual void PlayOnce(SoundTemplate sound, vec2d pos) = 0;
 	virtual void SetListenerPos(vec2d pos) = 0;
+	virtual void SetMasterVolume(float volume) = 0; // 0..1
 	virtual void Step() = 0;
 	virtual ~SoundRender() {}
 };

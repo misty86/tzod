@@ -1,6 +1,7 @@
 #include "TzodViewImpl.h"
 #include "inc/app/View.h"
 #include "inc/app/tzod.h"
+#include <shell/Config.h>
 #include <shell/Desktop.h>
 #include <shell/Profiler.h>
 #ifndef NOSOUND
@@ -56,6 +57,7 @@ void TzodView::Step(TzodApp &app, float dt, const Plat::Input &input)
 #ifndef NOSOUND
 	if (_impl->soundView)
 	{
+		_impl->soundView->SetVolume(std::max(0, std::min(10000, app.GetShellConfig().s_volume.GetInt())) / 10000.f);
 		auto listenerPos = _impl->desktop->GetListenerPos();
 		_impl->soundView->Step(listenerPos);
 	}

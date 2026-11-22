@@ -107,6 +107,11 @@ void SoundRenderOAL::SetListenerPos(vec2d pos)
     alListener3f(AL_POSITION, pos.x, pos.y, 500.0f);
 }
 
+void SoundRenderOAL::SetMasterVolume(float volume)
+{
+    alListenerf(AL_GAIN, volume);
+}
+
 std::unique_ptr<Sound> SoundRenderOAL::CreateLooped(SoundTemplate sound)
 {
 	ALuint source = 0;
