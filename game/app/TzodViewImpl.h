@@ -1,4 +1,5 @@
 #pragma once
+#include "inc/app/View.h"
 #include <platetc/UIInputRenderingController.h>
 #include <ui/GuiManager.h>
 #include <video/TextureManager.h>
@@ -15,7 +16,7 @@ namespace Plat
 
 struct TzodViewImpl
 {
-	TzodViewImpl(FS::FileSystem &fs, Plat::AppWindowCommandClose *cmdClose, Plat::ConsoleBuffer &logger, TzodApp& app);
+	TzodViewImpl(FS::FileSystem &fs, Plat::AppWindowCommandClose *cmdClose, Plat::ConsoleBuffer &logger, TzodApp& app, TzodViewOptions options);
 	~TzodViewImpl();
 
 	ImageCache imageCache;

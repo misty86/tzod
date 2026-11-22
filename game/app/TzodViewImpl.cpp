@@ -24,13 +24,20 @@ static auto InitTextureManager(FS::FileSystem &fs, ImageCache &imageCache)
 	return textureManager;
 }
 
-TzodViewImpl::TzodViewImpl(FS::FileSystem &fs, Plat::AppWindowCommandClose* cmdClose, Plat::ConsoleBuffer &logger, TzodApp &app)
+static TzodApp& ApplyOptions(TzodApp &app, const TzodViewOptions &options)
+{
+	if (options.netDebugChecksum)
+		app.GetShellConfig().net_debugchecksum.Set(true);
+	return app;
+}
+
+TzodViewImpl::TzodViewImpl(FS::FileSystem &fs, Plat::AppWindowCommandClose* cmdClose, Plat::ConsoleBuffer &logger, TzodApp &app, TzodViewOptions options)
 	: textureManager(InitTextureManager(fs, imageCache))
 	, timeStepManager()
 	, desktop(std::make_shared<Desktop>(
 		timeStepManager,
 		textureManager,
-		app.GetAppState(),
+		ApplyOptions(app, options).GetAppState(),
 		app.GetMapCollection(),
 		app.GetAppConfig(),
 		app.GetAppController(),
@@ -39,7 +46,8 @@ TzodViewImpl::TzodViewImpl(FS::FileSystem &fs, Plat::AppWindowCommandClose* cmdC
 		app.GetLang(),
 		app.GetDMCampaign(),
 		logger,
-		cmdClose))
+		cmdClose,
+		DesktopStartupOptions{ options.hostMap, options.autoStartDelay, options.joinAddress }))
 	, uiInputRenderingController(fs, textureManager, timeStepManager, desktop)
 #ifndef NOSOUND
 	, soundView(app.GetShellConfig().s_enabled.Get() ? std::make_unique<SoundView>(*fs.GetFileSystem(DIR_SOUND), logger, app.GetAppState()) : nullptr)

@@ -12,10 +12,13 @@ if((NOT IOS) AND (NOT WINRT) AND (NOT ANDROID))
 	add_subdirectory(gtest)
 	target_compile_definitions(gtest PUBLIC -DGTEST_LANG_CXX11 -DGTEST_HAS_TR1_TUPLE=0)
 
+	add_subdirectory(enet)
+
 	set_target_properties(
 		glfw
 		gtest
 		gtest_main
+		enet
 	PROPERTIES FOLDER external)
 endif()
 

@@ -96,8 +96,9 @@ void Deathmatch::OnDestroy(GC_RigidBodyStatic &obj, const DamageDesc &dd)
 			_world.New<GC_Text_ToolTip>(vehicle->GetPos(), score, GC_Text::SCORE_MINUS);
 		}
 
+		// must be the same on every machine in a network game - count all humans, not only local ones
 		int maxScore = INT_MIN;
-		for (auto player: _worldController.GetLocalPlayers())
+		for (auto player: _worldController.GetHumanPlayers())
 			maxScore = std::max(maxScore, player->GetScore());
 		for (auto player : _worldController.GetAIPlayers())
 			maxScore = std::max(maxScore, player->GetScore());

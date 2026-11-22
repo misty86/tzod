@@ -5,6 +5,10 @@
 #include "LuaConsole.h"
 #include "MainMenu.h"
 #include "NavStack.h"
+#ifdef WITH_NETWORK
+#include "NetLobby.h"
+#include <net/NetworkGameContext.h>
+#endif
 #include "SelectMapDlg.h"
 #include "Settings.h"
 #include "SinglePlayer.h"
@@ -44,6 +48,7 @@ extern "C"
 #include <lauxlib.h>
 }
 
+#include <algorithm>
 #include <functional>
 
 
@@ -58,7 +63,8 @@ Desktop::Desktop(UI::TimeStepManager &manager,
                  LangCache &lang,
                  DMCampaign &dmCampaign,
                  Plat::ConsoleBuffer &logger,
-                 Plat::AppWindowCommandClose* cmdClose)
+                 Plat::AppWindowCommandClose* cmdClose,
+                 DesktopStartupOptions startupOptions)
 	: Managerful(manager)
 	, AppStateListener(appState)
 	, _history(conf)
@@ -153,6 +159,13 @@ Desktop::Desktop(UI::TimeStepManager &manager,
 
 	_conf.d_showfps.eventChange = std::bind(&Desktop::OnChangeShowFps, this);
 	OnChangeShowFps();
+
+#ifdef WITH_NETWORK
+	if (!startupOptions.hostMap.empty())
+		HostGameOnMap(startupOptions.hostMap, startupOptions.autoStartDelay);
+	else if (!startupOptions.joinAddress.empty())
+		ShowJoinGameDlg()->Connect(startupOptions.joinAddress);
+#endif
 }
 
 Desktop::~Desktop()
@@ -265,6 +278,103 @@ void Desktop::OnSplitScreen()
 	_navStack->PushNavStack(dlg);
 }
 
+#ifdef WITH_NETWORK
+void Desktop::OnCreateGame()
+{
+	if (_navStack->IsOnStack<SelectMapDlg>() || _navStack->IsOnStack<CreateGameDlg>())
+		return;
+
+	auto selectMapDlg = std::make_shared<SelectMapDlg>(_fs, _worldView, _conf, _lang, _mapCollection, false /*allowNewMap*/);
+	selectMapDlg->eventMapSelected = [this](unsigned int mapIndex)
+	{
+		if (!_navStack->IsOnStack<CreateGameDlg>())
+			HostGameOnMap(std::string(_mapCollection.GetMapName(mapIndex)), 0);
+	};
+	_navStack->PushNavStack(selectMapDlg);
+}
+
+void Desktop::HostGameOnMap(std::string mapName, float autoStartDelay)
+{
+	try
+	{
+		auto session = std::make_shared<Net::HostSession>(
+			static_cast<uint16_t>(_conf.sv_port.GetInt()), MakeNetPlayerDesc(_appConfig.sp_playerinfo), _logger);
+		session->SetMap(mapName, Net::HashStream(*_mapCollection.QueryReadStream(_fs, mapName)));
+		session->SetRules(static_cast<uint8_t>(std::clamp(_appConfig.sp_difficulty.GetInt(), 0, 2)),
+			_conf.sv_fraglimit.GetInt(), _conf.sv_timelimit.GetFloat() * 60);
+		_conf.cl_map.Set(mapName);
+
+		auto dlg = std::make_shared<CreateGameDlg>(GetTimeStepManager(), _appConfig, _conf, _lang, std::move(session));
+		dlg->eventStart = [this, weakSender = std::weak_ptr<CreateGameDlg>(dlg)](std::shared_ptr<Net::HostSession> session, const Net::StartGameMsg &msg)
+		{
+			if (auto sender = weakSender.lock())
+			{
+				if (StartNetworkGame(std::move(session), msg, 0 /*the host is always player 0*/))
+					OnCloseChild(sender);
+			}
+		};
+		if (autoStartDelay > 0)
+			dlg->SetAutoStart(autoStartDelay);
+		_navStack->PushNavStack(dlg);
+	}
+	catch (const std::exception &e)
+	{
+		_logger.Printf(1, "%s - %s", std::string(_lang.net_server_error.Get()).c_str(), e.what());
+		ShowConsole(true);
+	}
+}
+
+void Desktop::OnJoinGame()
+{
+	if (!_navStack->IsOnStack<JoinGameDlg>())
+		ShowJoinGameDlg();
+}
+
+std::shared_ptr<JoinGameDlg> Desktop::ShowJoinGameDlg()
+{
+	auto dlg = std::make_shared<JoinGameDlg>(GetTimeStepManager(), _appConfig, _conf, _lang, _logger);
+	dlg->eventStart = [this, weakSender = std::weak_ptr<JoinGameDlg>(dlg)](std::shared_ptr<Net::ClientSession> session, const Net::StartGameMsg &msg)
+	{
+		if (auto sender = weakSender.lock())
+		{
+			unsigned localPlayerIndex = session->GetMyPlayerIndex();
+			if (StartNetworkGame(std::move(session), msg, localPlayerIndex))
+				OnCloseChild(sender);
+		}
+	};
+	_navStack->PushNavStack(dlg);
+	return dlg;
+}
+
+bool Desktop::StartNetworkGame(std::shared_ptr<Net::NetSession> session, const Net::StartGameMsg &msg, unsigned localPlayerIndex)
+{
+	try
+	{
+		const std::string &mapName = msg.lobby.mapName;
+		bool found = false;
+		for (int i = 0; i < _mapCollection.GetMapCount(); ++i)
+			found |= _mapCollection.GetMapName(i) == mapName;
+		if (!found)
+			throw std::runtime_error(std::string(_lang.net_connect_error_map.Get()) + " '" + mapName + "'");
+
+		if (!session->IsHost() && Net::HashStream(*_mapCollection.QueryReadStream(_fs, mapName)) != msg.lobby.mapHash)
+			throw std::runtime_error(std::string(_lang.net_connect_error_map_version.Get()) + " '" + mapName + "'");
+
+		// previous game/editor context may be held by UI, release it first to prevent memory spike
+		_navStack->Trim();
+		_appController.StartNetworkGame(GetAppState(), _mapCollection, mapName, MakeDMSettings(msg.lobby), msg.seed,
+			std::move(session), localPlayerIndex, msg.tickRate, msg.inputDelay, msg.debugChecksum, _logger);
+		return true;
+	}
+	catch (const std::exception &e)
+	{
+		_logger.Printf(1, "Could not start network game - %s", e.what());
+		ShowConsole(true);
+		return false;
+	}
+}
+#endif // WITH_NETWORK
+
 void Desktop::OnOpenMap()
 {
 	auto selectMapDlg = std::make_shared<SelectMapDlg>(_fs, _worldView, _conf, _lang, _mapCollection);
@@ -375,6 +485,10 @@ void Desktop::ShowMainMenu()
 	MainMenuCommands commands;
 	commands.singlePlayer = std::bind(&Desktop::OnSinglePlayer, this);
 	commands.splitScreen = std::bind(&Desktop::OnSplitScreen, this);
+#ifdef WITH_NETWORK
+	commands.createGame = std::bind(&Desktop::OnCreateGame, this);
+	commands.joinGame = std::bind(&Desktop::OnJoinGame, this);
+#endif
 	commands.openMap = std::bind(&Desktop::OnOpenMap, this);
 	commands.exportMap = std::bind(&Desktop::OnExportMap, this);
 	commands.gameSettings = std::bind(&Desktop::OnSettingsMain, this);
@@ -636,6 +750,12 @@ void Desktop::OnGameContextAdded()
 				_appController.StartDMCampaignMap(GetAppState(), _mapCollection, _appConfig, _dmCampaign, tierIndex, nextMapIndex);
 			};
 		}
+#ifdef WITH_NETWORK
+		else if (dynamic_cast<NetworkGameContext*>(gameContext.get()))
+		{
+			// no replay in a network game; the players leave through the pause menu
+		}
+#endif
 		else
 		{
 			campaignControlCommands.replayCurrent = [this]
@@ -661,9 +781,16 @@ void Desktop::OnGameContextAdded()
 			std::move(campaignControlCommands));
 		_navStack->PushNavStack(_game);
 
-		int currentTier = GetCurrentTier(_conf, _dmCampaign);
-		DMCampaignTier tierDesc(&_dmCampaign.tiers.GetTable(currentTier));
-		_tierTitle->SetText(ConfBind(tierDesc.title));
+		if (dynamic_cast<GameContextCampaignDM*>(gameContext.get()))
+		{
+			int currentTier = GetCurrentTier(_conf, _dmCampaign);
+			DMCampaignTier tierDesc(&_dmCampaign.tiers.GetTable(currentTier));
+			_tierTitle->SetText(ConfBind(tierDesc.title));
+		}
+		else
+		{
+			_tierTitle->SetText(std::make_shared<UI::StaticText>(std::string()));
+		}
 	}
 	else if (auto editorContext = std::dynamic_pointer_cast<EditorContext>(GetAppState().GetGameContext()))
 	{

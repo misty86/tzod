@@ -118,4 +118,5 @@ private:
 
 	// GameListener
 	void OnMurder(GC_Player& victim, GC_Player* killer, MurderType murderType) override;
+	void OnGameMessage(std::string_view text) override;
 };

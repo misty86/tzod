@@ -52,11 +52,6 @@ World::World(RectRB blockBounds, bool initField)
 		DivFloor(blockBounds.top * WORLD_BLOCK_SIZE, WORLD_LOCATION_SIZE),
 		DivCeil(blockBounds.right * WORLD_BLOCK_SIZE, WORLD_LOCATION_SIZE),
 		DivCeil(blockBounds.bottom * WORLD_BLOCK_SIZE, WORLD_LOCATION_SIZE) }
-#ifdef NETWORK_DEBUG
-	, _checksum(0)
-	, _frame(0)
-	, _dump(nullptr)
-#endif
 {
 	// don't create game objects in the constructor
 
@@ -116,15 +111,6 @@ void World::Clear()
 	// reset variables
 	_time = 0;
 	_gameStarted = false;
-#ifdef NETWORK_DEBUG
-	_checksum = 0;
-	_frame = 0;
-	if( _dump )
-	{
-		fclose(_dump);
-		_dump = nullptr;
-	}
-#endif
 	assert(GetList(LIST_objects).empty());
 }
 
@@ -477,30 +463,6 @@ void World::Step(float dt)
 	// sync lost error detection
 	//
 
-#ifdef NETWORK_DEBUG
-	if( !_dump )
-	{
-		char fn[MAX_PATH];
-		sprintf_s(fn, "network_dump_%u_%u.txt", GetTickCount(), GetCurrentProcessId());
-		_dump = fopen(fn, "w");
-		assert(_dump);
-	}
-	++_frame;
-	fprintf(_dump, "\n### frame %04d ###\n", _frame);
-
-	DWORD dwCheckSum = 0;
-	for( ObjectList::safe_iterator it = ts_fixed.safe_begin(); it != ts_fixed.end(); ++it )
-	{
-		if( DWORD cs = (*it)->checksum() )
-		{
-			dwCheckSum = dwCheckSum ^ cs ^ 0xD202EF8D;
-			dwCheckSum = (dwCheckSum >> 1) | ((dwCheckSum & 0x00000001) << 31);
-			fprintf(_dump, "0x%08x -> local 0x%08x, global 0x%08x  (%s)\n", (*it), cs, dwCheckSum, typeid(**it).name());
-		}
-	}
-	_checksum = dwCheckSum;
-	fflush(_dump);
-#endif
 }
 
 GC_Object* World::FindObject(std::string_view name) const

@@ -108,7 +108,7 @@ void GC_Pickup::Resume(World &world)
 		for (int n = 0; n < 50; ++n)
 		{
 			vec2d a = Vec2dDirection(PI2 * (float)n / 50);
-			world.New<GC_Particle>(GetPos() + a * 25, a * 25, PARTICLE_TYPE1, frand(0.5f) + 0.1f);
+			world.New<GC_Particle>(GetPos() + a * 25, a * 25, PARTICLE_TYPE1, world.net_frand(0.5f) + 0.1f);
 		}
 	}
 }
@@ -303,7 +303,7 @@ void GC_pu_Shield::TimeStep(World &world, float dt)
 void GC_pu_Shield::OnOwnerDamage(World &world, DamageDesc &dd)
 {
 	assert(_vehicle);
-	if( dd.damage > 5 || 0 == rand() % 4 || world.GetTime() - _timeHit > 0.2f )
+	if( dd.damage > 5 || 0 == world.net_rand() % 4 || world.GetTime() - _timeHit > 0.2f )
 	{
 		for( auto ls: world.eGC_pu_Shield._listeners )
 			ls->OnOwnerDamage(*this, dd);
@@ -314,8 +314,8 @@ void GC_pu_Shield::OnOwnerDamage(World &world, DamageDesc &dd)
 		vec2d v = _vehicle->_lv;
 		for( int i = 0; i < 7; i++ )
 		{
-			world.New<GC_Particle>(pos + dir * 26.0f + p * (float) (i<<1), v, PARTICLE_TYPE3, frand(0.4f)+0.1f);
-			world.New<GC_Particle>(pos + dir * 26.0f - p * (float) (i<<1), v, PARTICLE_TYPE3, frand(0.4f)+0.1f);
+			world.New<GC_Particle>(pos + dir * 26.0f + p * (float) (i<<1), v, PARTICLE_TYPE3, world.net_frand(0.4f)+0.1f);
+			world.New<GC_Particle>(pos + dir * 26.0f - p * (float) (i<<1), v, PARTICLE_TYPE3, world.net_frand(0.4f)+0.1f);
 		}
 	}
 	dd.damage *= 0.2f;

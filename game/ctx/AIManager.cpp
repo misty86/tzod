@@ -3,6 +3,7 @@
 #include <gc/Player.h>
 #include <gc/Vehicle.h>
 #include <gc/World.h>
+#include <cstdlib>
 
 AIManager::AIManager(World &world)
 	: _world(world)
@@ -35,7 +36,7 @@ AIManager::ControllerStateMap AIManager::ComputeAIState(World &world, float dt)
 
 	if (numActionable > 0)
 	{
-		unsigned int favorite = world.net_rand() % numActionable;
+		unsigned int favorite = rand() % numActionable;
 		unsigned int index = 0;
 		for (auto &ai : _aiControllers)
 		{

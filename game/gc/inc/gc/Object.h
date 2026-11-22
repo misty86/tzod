@@ -83,9 +83,6 @@ public:
 	virtual void MapExchange(MapFile &f);
 	virtual void Serialize(World &world, SaveFile &f);
 	virtual ObjectType GetType() const = 0;
-#ifdef NETWORK_DEBUG
-	virtual uint32_t checksum() const { return 0; }
-#endif
 
 private: // overrides don't have to call base class
 	virtual void Init(World &world) {}

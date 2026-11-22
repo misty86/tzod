@@ -424,9 +424,9 @@ void GC_Wall::OnDestroy(World &world, const DamageDesc &dd)
 {
 	for( int n = 0; n < 5; ++n )
 	{
-		world.New<GC_BrickFragment>(GetPos() + vrand(GetRadius()), vec2d{ frand(100.0f) - 50, -frand(100.0f) });
+		world.New<GC_BrickFragment>(GetPos() + world.net_vrand(GetRadius()), vec2d{ world.net_frand(100.0f) - 50, -world.net_frand(100.0f) });
 	}
-	world.New<GC_Particle>(GetPos(), SPEED_SMOKE, PARTICLE_SMOKE, frand(0.2f) + 0.3f);
+	world.New<GC_Particle>(GetPos(), SPEED_SMOKE, PARTICLE_SMOKE, world.net_frand(0.2f) + 0.3f);
 
 	GC_RigidBodyStatic::OnDestroy(world, dd);
 }
@@ -446,10 +446,10 @@ void GC_Wall::OnDamage(World &world, DamageDesc &dd)
 			v.x = 0;
 			v.y = v.y > 0 ? 50.0f : -50.0f;
 		}
-		v += vrand(25);
+		v += world.net_vrand(25);
 
 		world.New<GC_BrickFragment>(dd.hit, v*2.5f);
-		world.New<GC_Particle>(dd.hit + vrand(8), SPEED_SMOKE, PARTICLE_SMOKE, frand(0.2f) + 0.3f);
+		world.New<GC_Particle>(dd.hit + world.net_vrand(8), SPEED_SMOKE, PARTICLE_SMOKE, world.net_frand(0.2f) + 0.3f);
 	}
 	GC_RigidBodyStatic::OnDamage(world, dd);
 }

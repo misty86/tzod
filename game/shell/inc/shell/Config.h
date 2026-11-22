@@ -57,6 +57,7 @@ REFLECTION_BEGIN(ShellConfig) //  var_name  def_value
 	VAR_BOOL(   sv_nightmode,     false )
 	VAR_STR(    sv_lobby,            "" )
 	VAR_BOOL(   sv_use_lobby,     false )
+	VAR_BOOL(   net_debugchecksum, false )  // send/verify world checksum every tick
 
 	// client settings
 	VAR_STR(    cl_map,           "dm1" )

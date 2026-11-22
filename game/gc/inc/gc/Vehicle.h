@@ -71,14 +71,6 @@ public:
 	void Kill(World &world) override;
 	void Serialize(World &world, SaveFile &f) override;
 	void TimeStep(World &world, float dt) override;
-#ifdef NETWORK_DEBUG
-	virtual DWORD checksum(void) const
-	{
-		DWORD cs = reinterpret_cast<const DWORD&>(_enginePower) ^ reinterpret_cast<const DWORD&>(_rotatePower);
-		cs ^= reinterpret_cast<const DWORD&>(_maxRotSpeed) ^ reinterpret_cast<const DWORD&>(_maxLinSpeed);
-		return GC_RigidBodyDynamic::checksum() ^ cs;
-	}
-#endif
 
 protected:
 	void OnDamage(World &world, DamageDesc &dd) override;

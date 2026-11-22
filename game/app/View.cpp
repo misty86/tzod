@@ -11,8 +11,8 @@
 static CounterBase counterDt("raw dt", "raw dt, ms");
 static CounterBase counterDtFiltered("dt", "dt, ms");
 
-TzodView::TzodView(FS::FileSystem &fs, Plat::ConsoleBuffer &logger, TzodApp &app, Plat::AppWindowCommandClose *cmdClose)
-	: _impl(new TzodViewImpl(fs, cmdClose, logger, app))
+TzodView::TzodView(FS::FileSystem &fs, Plat::ConsoleBuffer &logger, TzodApp &app, Plat::AppWindowCommandClose *cmdClose, TzodViewOptions options)
+	: _impl(new TzodViewImpl(fs, cmdClose, logger, app, std::move(options)))
 {
 	//	ThemeManager themeManager(appState, *fs, texman);
 }

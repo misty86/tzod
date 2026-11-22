@@ -9,6 +9,9 @@
 #include <ctx/GameContext.h>
 #include <fs/FileSystem.h>
 #include <gc/World.h>
+#ifdef WITH_NETWORK
+#include <net/NetworkGameContext.h>
+#endif
 #include <algorithm>
 #include <time.h>
 
@@ -117,6 +120,28 @@ void AppController::PlayCurrentMap(AppState &appState, MapCollection& mapCollect
 
 	appState.PushGameContext(std::make_shared<GameContext>(std::move(world), settings));
 }
+
+#ifdef WITH_NETWORK
+void AppController::StartNetworkGame(AppState &appState,
+                                     MapCollection &mapCollection,
+                                     std::string_view mapName,
+                                     const DMSettings &settings,
+                                     uint32_t seed,
+                                     std::shared_ptr<Net::NetSession> session,
+                                     unsigned localPlayerIndex,
+                                     float tickRate,
+                                     unsigned inputDelay,
+                                     bool debugChecksum,
+                                     Plat::ConsoleBuffer &logger)
+{
+	while (appState.GetGameContext())
+		appState.PopGameContext();
+
+	auto world = mapCollection.ExtractCachedWorld(_fs, mapName);
+	appState.PushGameContext(std::make_shared<NetworkGameContext>(
+		std::move(world), settings, seed, std::move(session), localPlayerIndex, tickRate, inputDelay, debugChecksum, logger));
+}
+#endif
 
 void AppController::StartNewMapEditor(AppState& appState, MapCollection& mapCollection, int width, int height, std::string_view existingMapNameOptional)
 {

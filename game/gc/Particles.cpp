@@ -12,9 +12,9 @@ IMPLEMENT_1LIST_MEMBER(GC_MovingObject, GC_BrickFragment, LIST_timestep);
 
 GC_BrickFragment::GC_BrickFragment(vec2d pos, vec2d v0)
   : GC_MovingObject(pos)
-  , _startFrame(rand())
+  , _startFrame(0) // randomized in Init()
   , _time(0)
-  , _timeLife(frand(0.1f) + 0.2f)
+  , _timeLife(0)
   , _velocity(v0)
 {
 }
@@ -22,6 +22,13 @@ GC_BrickFragment::GC_BrickFragment(vec2d pos, vec2d v0)
 GC_BrickFragment::GC_BrickFragment(FromFile)
   : GC_MovingObject(FromFile())
 {
+}
+
+void GC_BrickFragment::Init(World &world)
+{
+	GC_MovingObject::Init(world);
+	_startFrame = world.net_rand();
+	_timeLife = world.net_frand(0.1f) + 0.2f;
 }
 
 void GC_BrickFragment::Serialize(World &world, SaveFile &f)

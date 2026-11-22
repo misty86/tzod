@@ -55,7 +55,7 @@ void ShootingAgent::AttackTarget(World &world, const GC_Vehicle &myVehicle, cons
 				d = d_array[_accuracy] * (fabs(targetAsVehicle->_lv.len()) / targetAsVehicle->GetMaxSpeed() / 2 + 0.5f);
 			}
 
-			_desiredOffset = (d > 0) ? (world.net_frand(d) - d * 0.5f) : 0;
+			_desiredOffset = (d > 0) ? (frand(d) - d * 0.5f) : 0;
 		}
 		else
 		{

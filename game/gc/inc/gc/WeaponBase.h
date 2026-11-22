@@ -56,15 +56,6 @@ public:
 	void Kill(World &world) override;
 	void Serialize(World &world, SaveFile &f) override;
 	void TimeStep(World &world, float dt) override;
-#ifdef NETWORK_DEBUG
-/*	virtual DWORD checksum(void) const
-	{
-		DWORD cs = reinterpret_cast<const DWORD&>(_angleReal)
-			^ reinterpret_cast<const DWORD&>(_timeReload)
-			^ reinterpret_cast<const DWORD&>(_timeStay);
-		return GC_Pickup::checksum() ^ cs;
-	}*/
-#endif
 
 protected:
 	class MyPropertySet : public GC_Pickup::MyPropertySet

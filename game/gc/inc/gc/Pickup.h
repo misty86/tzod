@@ -90,15 +90,6 @@ public:
 	void MapExchange(MapFile &f) override;
 	void Serialize(World &world, SaveFile &f) override;
 	void Resume(World &world) override;
-#ifdef NETWORK_DEBUG
-	virtual DWORD checksum(void) const
-	{
-		DWORD cs = reinterpret_cast<const DWORD&>(GetPos().x)
-		^ reinterpret_cast<const DWORD&>(GetPos().y)
-		^ reinterpret_cast<const DWORD&>(_timeLastStateChange);
-		return GC_MovingObject::checksum() ^ cs;
-	}
-#endif
 
 protected:
 	class MyPropertySet : public GC_MovingObject::MyPropertySet

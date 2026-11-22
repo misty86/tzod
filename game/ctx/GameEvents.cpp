@@ -23,3 +23,9 @@ void GameEventsBroadcaster::OnMurder(GC_Player &victim, GC_Player *killer, Murde
 	for (auto ls: _listeners)
 		ls->OnMurder(victim, killer, murderType);
 }
+
+void GameEventsBroadcaster::OnGameMessage(std::string_view text)
+{
+	for (auto ls : _listeners)
+		ls->OnGameMessage(text);
+}

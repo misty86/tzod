@@ -310,7 +310,7 @@ void GC_Vehicle::TimeStep(World &world, float dt)
 		float smoke_dt = 1.0f / (60.0f * (1.0f - GetHealth() / (GetHealthMax() * 0.5f)));
 		for(; _time_smoke > 0; _time_smoke -= smoke_dt)
 		{
-			world.New<GC_Particle>(GetPos() + vrand(frand(24.0f)), SPEED_SMOKE, PARTICLE_SMOKE, 1.5f, frand(1.0f));
+			world.New<GC_Particle>(GetPos() + world.net_vrand(world.net_frand(24.0f)), SPEED_SMOKE, PARTICLE_SMOKE, 1.5f, world.net_frand(1.0f));
 		}
 	}
 

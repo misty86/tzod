@@ -242,7 +242,7 @@ bool AIController::FindItem(World &world, const GC_Vehicle &vehicle, /*out*/ AII
 	{
 		GC_Pickup *items[2] = {
 			_pickupCurrent,
-			applicants[world.net_rand() % applicants.size()]
+			applicants[rand() % applicants.size()]
 		};
 		for( int i = 0; i < 2; ++i )
 		{
@@ -287,7 +287,7 @@ void AIController::SelectFavoriteWeapon(World &world)
 		const char *name = RTTypes::Inst().GetTypeInfo(type).name;
 		if( name == std::strstr(name, "weap_") )
 		{
-			if( 0 == world.net_rand() % ++wcount )
+			if( 0 == rand() % ++wcount )
 			{
 				_favoriteWeaponType = type;
 			}
@@ -480,7 +480,7 @@ void AIController::SelectState(World &world, const GC_Vehicle &vehicle, const AI
 		assert(nullptr == _target);
 		if( !_drivingAgent->HasPath() )
 		{
-			vec2d t = vehicle.GetPos() + world.net_vrand(sqrtf(world.net_frand(1.0f))) * AI_MAX_SIGHT;
+			vec2d t = vehicle.GetPos() + vrand(sqrtf(frand(1.0f))) * AI_MAX_SIGHT;
 			t = Vec2dClamp(t, world.GetBounds());
 
 			if (_drivingAgent->CreatePath(world, vehicle.GetPos(), vehicle.GetDirection(), t, vehicle.GetOwner()->GetTeam(), AI_MAX_DEPTH, false, ws) > 0)

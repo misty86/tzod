@@ -206,6 +206,18 @@ REFLECTION_BEGIN(LangCache)
 	VAR_STR( net_msg_connection_established, "Connection established" )
 	VAR_STR( net_msg_starting_game, "All players ready. Starting game..." )
 
+	VAR_STR( net_create_game_btn, "CREATE GAME" )
+	VAR_STR( net_join_game_btn, "JOIN GAME" )
+	VAR_STR( net_lobby_start, "START" )
+	VAR_STR( net_lobby_map, "Map: %s" )
+	VAR_STR( net_lobby_listening, "Listening on port %s" )
+	VAR_STR( net_lobby_waiting_for_host, "Waiting for the host to start the game..." )
+	VAR_STR( net_connect_error_full, "Server is full" )
+	VAR_STR( net_connect_error_game_started, "Game already started" )
+	VAR_STR( net_msg_host_disconnected, "Connection to the host lost" )
+	VAR_STR( net_lobby_not_ready, "Not everyone is ready yet" )
+	VAR_STR( net_lobby_ready_count, "ready" )
+
 
 	//
 	// Settings

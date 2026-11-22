@@ -15,13 +15,38 @@ std::vector<GC_Player*> WorldController::GetLocalPlayers() const
 	std::vector<GC_Player*> players;
 	FOREACH(_world.GetList(LIST_players), GC_Player, player)
 	{
-		// TODO: differentiate local and remote players
+		if (player->GetIsHuman() && IsLocalPlayer(*player))
+		{
+			players.push_back(player);
+		}
+	}
+	return players;
+}
+
+std::vector<GC_Player*> WorldController::GetHumanPlayers() const
+{
+	std::vector<GC_Player*> players;
+	FOREACH(_world.GetList(LIST_players), GC_Player, player)
+	{
 		if (player->GetIsHuman())
 		{
 			players.push_back(player);
 		}
 	}
 	return players;
+}
+
+void WorldController::SetLocalPlayer(const GC_Player &player, bool isLocal)
+{
+	if (isLocal)
+		_localPlayerIds.insert(player.GetId());
+	else
+		_localPlayerIds.erase(player.GetId());
+}
+
+bool WorldController::IsLocalPlayer(const GC_Player &player) const
+{
+	return _localPlayerIds.count(player.GetId()) != 0;
 }
 
 std::vector<GC_Player*> WorldController::GetAIPlayers() const

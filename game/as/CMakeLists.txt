@@ -22,3 +22,7 @@ target_link_libraries(as PRIVATE
 
 target_include_directories(as INTERFACE inc)
 set_target_properties(as PROPERTIES FOLDER game)
+if(WITH_NETWORK)
+	target_link_libraries(as PRIVATE netgame)
+	target_compile_definitions(as PUBLIC WITH_NETWORK)
+endif()

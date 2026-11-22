@@ -83,3 +83,8 @@ target_link_libraries(shell PRIVATE
 
 target_include_directories(shell INTERFACE inc)
 set_target_properties(shell PROPERTIES FOLDER game)
+
+if(WITH_NETWORK)
+	target_sources(shell PRIVATE NetLobby.h NetLobby.cpp)
+	target_link_libraries(shell PRIVATE netgame)
+endif()

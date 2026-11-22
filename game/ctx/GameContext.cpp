@@ -11,11 +11,16 @@
 #include <climits>
 
 GameContext::GameContext(std::unique_ptr<World> world, const DMSettings &settings)
+	: GameContext(std::move(world), settings, (unsigned long) rand())
+{
+}
+
+GameContext::GameContext(std::unique_ptr<World> world, const DMSettings &settings, unsigned long seed)
 	: _world(std::move(world))
 	, _aiManager(std::make_unique<AIManager>(*_world))
 	, _difficulty(settings.difficulty)
 {
-	_world->Seed(rand());
+	_world->Seed(seed);
 
 	for( const PlayerDesc &pd: settings.players )
 	{
@@ -25,8 +30,7 @@ GameContext::GameContext(std::unique_ptr<World> world, const DMSettings &setting
 		player.SetNick(pd.nick);
 		player.SetSkin(pd.skin);
 		player.SetTeam(pd.team);
-
-//		_inputMgr->AssignController(&player, p.profile.Get());
+		_dmPlayerIds.push_back(player.GetId());
 	}
 
 	for( const PlayerDesc &pd: settings.bots )
@@ -37,11 +41,16 @@ GameContext::GameContext(std::unique_ptr<World> world, const DMSettings &setting
 		player.SetNick(pd.nick);
 		player.SetSkin(pd.skin);
 		player.SetTeam(pd.team);
+		_dmPlayerIds.push_back(player.GetId());
 
 		_aiManager->AssignAI(&player, settings.difficulty);
 	}
 
 	_worldController.reset(new WorldController(*_world));
+
+	// by default all human players are controlled from this machine
+	for (auto player : _worldController->GetHumanPlayers())
+		_worldController->SetLocalPlayer(*player, true);
 
 	auto gameplay = std::make_unique<Deathmatch>(*_world, *_worldController, _gameEventsBroadcaster);
 	gameplay->SetFragLimit(settings.fragLimit);
@@ -68,9 +77,19 @@ void GameContext::Step(float dt, AppConfig &appConfig, bool *outConfigChanged)
 	if (IsWorldActive())
 	{
 		_worldController->SendControllerStates(_aiManager->ComputeAIState(*_world, dt));
-		_world->Step(dt);
-		_scriptHarness->Step(dt);
+		StepSimulation(dt);
 	}
+}
+
+void GameContext::StepSimulation(float dt)
+{
+	_world->Step(dt);
+	_scriptHarness->Step(dt);
+}
+
+void GameContext::SetLocalControllerStates(WorldController::ControllerStateMap states)
+{
+	_worldController->SendControllerStates(std::move(states));
 }
 
 bool GameContext::IsGameplayActive() const
@@ -84,6 +103,18 @@ bool GameContext::IsGameplayActive() const
 bool GameContext::IsWorldActive() const
 {
 	return (_world->GetTime() < _gameplay->GetGameEndTime()) && IsGameplayActive();
+}
+
+bool GameContext::IsGameOver() const
+{
+	return _gameplay && _gameplayTime >= _gameplay->GetGameEndTime();
+}
+
+GC_Player* GameContext::GetDMPlayer(size_t index) const
+{
+	if (index >= _dmPlayerIds.size())
+		return nullptr;
+	return static_cast<GC_Player*>(_world->GetList(LIST_objects).at(_dmPlayerIds[index]));
 }
 
 void GameContext::Serialize(FS::Stream &stream)

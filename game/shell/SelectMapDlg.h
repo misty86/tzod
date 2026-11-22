@@ -22,7 +22,8 @@ class SelectMapDlg final
 	, private MapCollectionListener
 {
 public:
-	SelectMapDlg(FS::FileSystem &fsRoot, WorldView& worldView, ShellConfig &conf, LangCache &lang, MapCollection &mapCollection);
+	// allowNewMap adds the "+" tile which reports index -1
+	SelectMapDlg(FS::FileSystem &fsRoot, WorldView& worldView, ShellConfig &conf, LangCache &lang, MapCollection &mapCollection, bool allowNewMap = true);
 
 	std::function<void(unsigned int)> eventMapSelected;
 
@@ -32,6 +33,7 @@ private:
 	ShellConfig &_conf;
 	MapCollection& _mapCollection;
 	std::shared_ptr<UI::ScanlineLayout> _mapTiles;
+	bool _allowNewMap;
 
 	// MapCollectionListener
 	void OnMapAdded(int newMapIndex) override;

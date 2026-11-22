@@ -432,7 +432,7 @@ void GC_TurretCannon::TimeStep(World &world, float dt)
 			world.New<GC_Particle>(GetPos() + Vec2dDirection(GetWeaponDir()) * 33.0f,
 			                       SPEED_SMOKE + Vec2dDirection(GetWeaponDir()) * 50,
 			                       PARTICLE_SMOKE,
-			                       frand(0.3f) + 0.2f);
+			                       world.net_frand(0.3f) + 0.2f);
 		}
 	}
 }
@@ -678,7 +678,7 @@ void GC_TurretMinigun::OnShoot(World &world)
 	float ang = _dir + world.net_frand(0.1f) - 0.05f;
 	vec2d a = Vec2dDirection(_dir);
 	world.New<GC_Bullet>(GetPos() + a * 31.9f, Vec2dDirection(ang) * SPEED_BULLET, this, nullptr, false);
-	world.New<GC_Particle>(GetPos() + a * 31.9f, a * (400 + frand(400.0f)), PARTICLE_TYPE1, frand(0.06f) + 0.03f);
+	world.New<GC_Particle>(GetPos() + a * 31.9f, a * (400 + world.net_frand(400.0f)), PARTICLE_TYPE1, world.net_frand(0.06f) + 0.03f);
 }
 
 ////////////////////////////////////////////////////////////////////

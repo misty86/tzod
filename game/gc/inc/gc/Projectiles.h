@@ -34,15 +34,6 @@ public:
 	void Kill(World &world) override;
 	void Serialize(World &world, SaveFile &f) override;
 	void TimeStep(World &world, float dt) override;
-#ifdef NETWORK_DEBUG
-	virtual DWORD checksum(void) const
-	{
-		DWORD cs = reinterpret_cast<const DWORD&>(GetPos().x);
-		cs ^= reinterpret_cast<const DWORD&>(GetPos().y);
-		cs ^= reinterpret_cast<const DWORD&>(_velocity);
-		return GC_MovingObject::checksum() ^ cs;
-	}
-#endif
 
 protected:
 	float GetTrailDensity() { return _trailDensity; }

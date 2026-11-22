@@ -233,7 +233,7 @@ void GC_Weap_Cannon::TimeStep(World &world, float dt)
 
 		for( ;_time_smoke_dt > 0; _time_smoke_dt -= 0.025f )
 		{
-			world.New<GC_Particle>(GetPos() + GetDirection() * 26.0f, SPEED_SMOKE + GetDirection() * 50.0f, PARTICLE_SMOKE, frand(0.3f) + 0.2f);
+			world.New<GC_Particle>(GetPos() + GetDirection() * 26.0f, SPEED_SMOKE + GetDirection() * 50.0f, PARTICLE_SMOKE, world.net_frand(0.3f) + 0.2f);
 		}
 	}
 }
@@ -447,10 +447,10 @@ void GC_Weap_Ram::TimeStep(World &world, float dt)
 			vec2d emitter = GetPos() - a * 20.0f;
 			for( int i = 0; i < 29; ++i )
 			{
-				float time = frand(0.05f) + 0.02f;
-				float t = frand(6.0f) - 3.0f;
+				float time = world.net_frand(0.05f) + 0.02f;
+				float t = world.net_frand(6.0f) - 3.0f;
 				vec2d dx{ -a.y * t, a.x * t };
-				world.New<GC_Particle>(emitter + dx, v - a * frand(800.0f) - dx / time, fabs(t) > 1.5 ? PARTICLE_FIRE2 : PARTICLE_YELLOW, time);
+				world.New<GC_Particle>(emitter + dx, v - a * world.net_frand(800.0f) - dx / time, fabs(t) > 1.5 ? PARTICLE_FIRE2 : PARTICLE_YELLOW, time);
 			}
 		}
 
@@ -462,10 +462,10 @@ void GC_Weap_Ram::TimeStep(World &world, float dt)
 			vec2d emitter = GetPos() - a * 15.0f + vec2d{ -a.y, a.x } * l * 17.0f;
 			for( int i = 0; i < 10; i++ )
 			{
-				float time = frand(0.05f) + 0.02f;
-				float t = frand(2.5f) - 1.25f;
+				float time = world.net_frand(0.05f) + 0.02f;
+				float t = world.net_frand(2.5f) - 1.25f;
 				vec2d dx{ -a.y * t, a.x * t };
-				world.New<GC_Particle>(emitter + dx, v - a * frand(600.0f) - dx / time, PARTICLE_FIRE1, time);
+				world.New<GC_Particle>(emitter + dx, v - a * world.net_frand(600.0f) - dx / time, PARTICLE_FIRE1, time);
 			}
 		}
 	}

@@ -10,6 +10,7 @@ public:
 	GC_BrickFragment(vec2d pos, vec2d v0);
 	GC_BrickFragment(FromFile);
 
+	void Init(World &world) override;
 	void Serialize(World &world, SaveFile &f) override;
 	void TimeStep(World &world, float dt) override;
 

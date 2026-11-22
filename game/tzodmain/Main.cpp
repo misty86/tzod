@@ -12,6 +12,8 @@ using FileSystem = FS::FileSystemPosix;
 #include <plat/Folders.h>
 #include <platglfw/GlfwAppWindow.h>
 #include <platglfw/Timer.h>
+#include <cstdlib>
+#include <cstring>
 #include <exception>
 
 static void print_what(std::ostream &os, const std::exception &e, std::string prefix = std::string())
@@ -38,7 +40,7 @@ int APIENTRY WinMain( HINSTANCE, // hInstance
                       LPSTR, // lpCmdLine
                       int) // nCmdShow
 #else
-int main(int, const char**)
+int main(int argc, const char **argv)
 #endif
 try
 {
@@ -48,11 +50,42 @@ try
 #if defined(_DEBUG) && defined(_WIN32) // memory leaks detection
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
-	s_logger.SetLog(new ConsoleLog("log.txt"));
+
+	// --user <folder>     user data folder name (lets several instances run side by side, e.g. for network testing)
+	// --log <file>        log file name
+	// --host <map>        create a network game on the map right away
+	// --autostart <sec>   ...and start it after the given number of seconds
+	// --join <host[:port]> join a network game right away
+	// --netchecksum       verify the world checksum every tick (desync detection)
+	const char *userFolder = "Tank Zone of Death";
+	const char *logFile = "log.txt";
+	TzodViewOptions viewOptions;
+#ifdef _WIN32
+	int argc = __argc;
+	char **argv = __argv;
+#endif
+	for (int i = 1; i < argc; ++i)
+	{
+		bool hasValue = i + 1 < argc;
+		if (0 == strcmp(argv[i], "--user") && hasValue)
+			userFolder = argv[++i];
+		else if (0 == strcmp(argv[i], "--log") && hasValue)
+			logFile = argv[++i];
+		else if (0 == strcmp(argv[i], "--host") && hasValue)
+			viewOptions.hostMap = argv[++i];
+		else if (0 == strcmp(argv[i], "--autostart") && hasValue)
+			viewOptions.autoStartDelay = (float) atof(argv[++i]);
+		else if (0 == strcmp(argv[i], "--join") && hasValue)
+			viewOptions.joinAddress = argv[++i];
+		else if (0 == strcmp(argv[i], "--netchecksum"))
+			viewOptions.netDebugChecksum = true;
+	}
+
+	s_logger.SetLog(new ConsoleLog(logFile));
 	s_logger.Printf(0, "%s", TZOD_VERSION);
 
 	auto fs = std::make_shared<FileSystem>(Plat::GetBundleResourcesFolder())->GetFileSystem("data");
-	auto user = std::make_shared<FileSystem>(Plat::GetAppDataFolder())->GetFileSystem("Tank Zone of Death", true);
+	auto user = std::make_shared<FileSystem>(Plat::GetAppDataFolder())->GetFileSystem(userFolder, true);
 	fs->Mount("user", user);
 
 	TzodApp app(*fs, s_logger);
@@ -65,7 +98,7 @@ try
 		768 //app.GetShellConfig().r_height.GetInt()
 	);
 
-	TzodView view(*fs, s_logger, app, appWindow.CmdClose());
+	TzodView view(*fs, s_logger, app, appWindow.CmdClose(), std::move(viewOptions));
 	Timer timer;
 	timer.SetMaxDt(0.05f);
 	timer.Start();

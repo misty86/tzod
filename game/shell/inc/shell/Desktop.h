@@ -36,6 +36,21 @@ class LuaConsole;
 class MainMenuDlg;
 class MapCollection;
 class NavStack;
+class JoinGameDlg;
+
+namespace Net
+{
+	class NetSession;
+	struct StartGameMsg;
+}
+
+// Optional actions performed right after startup; handy for testing the network game from the command line
+struct DesktopStartupOptions
+{
+	std::string hostMap;       // create a network game on this map...
+	float autoStartDelay = 0;  // ...and start it after this many seconds (0 = wait for the Start button)
+	std::string joinAddress;   // join a network game at host[:port]
+};
 
 class Desktop final
 	: public UI::WindowContainer
@@ -56,7 +71,8 @@ public:
 	        LangCache &lang,
 	        DMCampaign &dmCampaign,
 	        Plat::ConsoleBuffer &logger,
-	        Plat::AppWindowCommandClose* cmdClose = nullptr);
+	        Plat::AppWindowCommandClose* cmdClose = nullptr,
+	        DesktopStartupOptions startupOptions = {});
 	virtual ~Desktop();
 
 	void ShowConsole(bool show);
@@ -103,6 +119,14 @@ private:
 	void OnNewCampaign();
 	void OnSinglePlayer();
 	void OnSplitScreen();
+#ifdef WITH_NETWORK
+	void OnCreateGame();
+	void OnJoinGame();
+	void HostGameOnMap(std::string mapName, float autoStartDelay);
+	std::shared_ptr<JoinGameDlg> ShowJoinGameDlg();
+	// Verifies the map and starts the lockstep game; returns false if the game could not be started
+	bool StartNetworkGame(std::shared_ptr<Net::NetSession> session, const Net::StartGameMsg &msg, unsigned localPlayerIndex);
+#endif
 	void OnOpenMap();
 	void OnExportMap();
 	void OnSettingsMain();

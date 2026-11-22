@@ -11,13 +11,14 @@
 #include <ui/ScrollView.h>
 #include <ui/StackLayout.h>
 
-SelectMapDlg::SelectMapDlg(FS::FileSystem& fsRoot, WorldView &worldView, ShellConfig &conf, LangCache &lang, MapCollection &mapCollection)
+SelectMapDlg::SelectMapDlg(FS::FileSystem& fsRoot, WorldView &worldView, ShellConfig &conf, LangCache &lang, MapCollection &mapCollection, bool allowNewMap)
 	: MapCollectionListener(mapCollection)
 	, _fs(fsRoot)
 	, _worldView(worldView)
 	, _conf(conf)
 	, _mapCollection(mapCollection)
 	, _mapTiles(std::make_shared<UI::ScanlineLayout>())
+	, _allowNewMap(allowNewMap)
 {
 	SetContent(_mapTiles);
 	_mapTiles->SetElementSize(vec2d{ _conf.ui_tile_size.GetFloat(), _conf.ui_tile_size.GetFloat() });
@@ -30,14 +31,17 @@ void SelectMapDlg::OnMapAdded(int newMapIndex)
 	_mapTiles->UnlinkAllChildren(); // TODO: add just one element
 
 	using namespace UI::DataSourceAliases;
-	auto newMapButton = std::make_shared<UI::Button>();
-	newMapButton->SetText("+"_txt);
-	newMapButton->SetFont("font_default");
-	newMapButton->eventClick = [this]()
+	if (_allowNewMap)
 	{
-		eventMapSelected(-1);
-	};
-	_mapTiles->AddFront(newMapButton);
+		auto newMapButton = std::make_shared<UI::Button>();
+		newMapButton->SetText("+"_txt);
+		newMapButton->SetFont("font_default");
+		newMapButton->eventClick = [this]()
+		{
+			eventMapSelected(-1);
+		};
+		_mapTiles->AddFront(newMapButton);
+	}
 
 	auto mapCount = GetMapCollection().GetMapCount();
 	for (int mapIndex = 0; mapIndex < mapCount; mapIndex++)
@@ -45,7 +49,8 @@ void SelectMapDlg::OnMapAdded(int newMapIndex)
 		_mapTiles->AddFront(MakeMapTileButton(mapIndex));
 	}
 
-	_mapTiles->SetFocus(&_mapTiles->GetChild(0));
+	if (_mapTiles->GetChildrenCount() > 0)
+		_mapTiles->SetFocus(&_mapTiles->GetChild(0));
 }
 
 std::shared_ptr<UI::ContentButton> SelectMapDlg::MakeMapTileButton(int mapIndex)

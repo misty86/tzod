@@ -31,6 +31,26 @@ MainMenuDlg::MainMenuDlg(LangCache &lang,
 	button->eventClick = _commands.splitScreen;
 //	AddFront(button);
 
+	if (_commands.createGame)
+	{
+		button = std::make_shared<UI::Button>();
+		button->SetFont("font_default");
+		button->SetText(ConfBind(lang.net_create_game_btn));
+		button->Resize(c_buttonWidth, c_buttonHeight);
+		button->eventClick = _commands.createGame;
+		AddFront(button);
+	}
+
+	if (_commands.joinGame)
+	{
+		button = std::make_shared<UI::Button>();
+		button->SetFont("font_default");
+		button->SetText(ConfBind(lang.net_join_game_btn));
+		button->Resize(c_buttonWidth, c_buttonHeight);
+		button->eventClick = _commands.joinGame;
+		AddFront(button);
+	}
+
 	button = std::make_shared<UI::Button>();
 	button->SetFont("font_default");
 	button->SetText(ConfBind(lang.editor_btn));

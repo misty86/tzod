@@ -598,7 +598,7 @@ void DrivingAgent::ComputeState(World &world, const GC_Vehicle &vehicle, float d
 
 	if (_backTime <= 0 && world.GetTime() - _lastProgressTime > 0.6f)
 	{
-		_backTime = world.net_frand(0.5f);
+		_backTime = frand(0.5f);
 	}
 }
 

@@ -232,11 +232,7 @@ bool GameLayout::GetAllPlayerDead() const
 
 bool GameLayout::GetGameOver() const
 {
-	if (Gameplay* gameplay = _gameContext->GetGameplay())
-	{
-		return _gameContext->GetGameplayTime() >= gameplay->GetGameEndTime();
-	}
-	return false;
+	return _gameContext->IsGameOver();
 }
 
 float GameLayout::GetLastPlayerDieTime() const
@@ -302,7 +298,12 @@ void GameLayout::OnTimeStep(const Plat::Input &input, bool focused, float dt)
 			}
 		}
 
-		_worldController.SendControllerStates(std::move(controlStates));
+		_gameContext->SetLocalControllerStates(std::move(controlStates));
+	}
+	else
+	{
+		// no input while paused or unfocused; a network game keeps running and needs to know that
+		_gameContext->SetLocalControllerStates({});
 	}
 }
 
@@ -507,6 +508,11 @@ void GameLayout::OnMurder(GC_Player &victim, GC_Player *killer, MurderType murde
 		break;
 	}
 	_msg->WriteLine(msg);
+}
+
+void GameLayout::OnGameMessage(std::string_view text)
+{
+	_msg->WriteLine(std::string(text));
 }
 
 void GameLayout::ShowPauseMenu()

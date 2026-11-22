@@ -82,11 +82,6 @@ public:
 	DECLARE_EVENTS(GC_Vehicle);
 	DECLARE_EVENTS(World);
 
-#ifdef NETWORK_DEBUG
-	uint32_t _checksum;
-	int _frame;
-	FILE *_dump;
-#endif
 
 	static const unsigned int NET_RAND_MAX = 0xffff;
 
@@ -190,16 +185,13 @@ public:
 	void Clear();
 	GC_Player* GetPlayerByIndex(size_t playerIndex);
 	void Seed(unsigned long seed);
+	unsigned long GetSeed() const { return _seed; }
 
 	float GetTime() const { return _time; }
 	const RectRB& GetLocationBounds() const { return _locationBounds; }
 	const RectRB& GetBlockBounds() const { return _blockBounds; }
 	const FRECT& GetBounds() const { return _bounds; }
 
-#ifdef NETWORK_DEBUG
-	uint32_t GetChecksum() const { return _checksum; }
-	unsigned int GetFrame() const { return _frame; }
-#endif
 
 	ResumableObject* Timeout(GC_Object &obj, float timeout);
 	size_t GetResumableCount() const { return _resumables.size(); }
