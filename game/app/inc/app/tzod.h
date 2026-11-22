@@ -22,6 +22,14 @@ class LangCache;
 class MapCollection;
 class DMCampaign;
 
+// Window settings from the shell config (r_fullscreen, r_width, r_height)
+struct TzodDisplaySettings
+{
+	bool fullscreen = false;
+	int width = 1024;
+	int height = 768;
+};
+
 class TzodApp final
 {
 public:
@@ -35,6 +43,7 @@ public:
 	ShellConfig& GetShellConfig();
 	LangCache& GetLang();
 	DMCampaign &GetDMCampaign();
+	TzodDisplaySettings GetDisplaySettings() const;
 
 	void Step(float dt);
 	void SaveConfig();

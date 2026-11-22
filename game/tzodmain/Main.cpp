@@ -94,12 +94,8 @@ try
 	TzodApp app(*fs, s_logger);
 
 	s_logger.Printf(0, "Creating GL context");
-	GlfwAppWindow appWindow(
-		TZOD_VERSION,
-		false, // conf.r_fullscreen.Get(),
-		1024, //app.GetShellConfig().r_width.GetInt(),
-		768 //app.GetShellConfig().r_height.GetInt()
-	);
+	auto display = app.GetDisplaySettings(); // r_fullscreen, r_width, r_height; Alt+Enter toggles at run time
+	GlfwAppWindow appWindow(TZOD_VERSION, display.fullscreen, display.width, display.height);
 
 	TzodView view(*fs, s_logger, app, appWindow.CmdClose(), std::move(viewOptions));
 	Timer timer;

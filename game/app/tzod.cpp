@@ -8,6 +8,7 @@
 #include <fs/StreamWrapper.h>
 #include <loc/Language.h>
 #include <plat/ConsoleBuffer.h>
+#include <algorithm>
 
 #define FILE_CONFIG      "user/config.cfg"
 #define FILE_DMCAMPAIGN  "dmcampaign.cfg"
@@ -104,6 +105,15 @@ LangCache& TzodApp::GetLang()
 DMCampaign& TzodApp::GetDMCampaign()
 {
 	return _impl->dmCampaign;
+}
+
+TzodDisplaySettings TzodApp::GetDisplaySettings() const
+{
+	TzodDisplaySettings result;
+	result.fullscreen = _impl->combinedConfig.shell.r_fullscreen.Get();
+	result.width = std::max(320, _impl->combinedConfig.shell.r_width.GetInt());
+	result.height = std::max(240, _impl->combinedConfig.shell.r_height.GetInt());
+	return result;
 }
 
 void TzodApp::Step(float dt)
