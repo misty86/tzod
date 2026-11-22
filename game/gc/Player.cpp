@@ -99,7 +99,20 @@ void GC_Player::SetScore(int score)
 	_score = score;
 }
 
+static GC_SpawnPoint* SelectRespawnPointImpl(World &world, int team);
+
 static GC_SpawnPoint* SelectRespawnPoint(World &world, int team)
+{
+	GC_SpawnPoint *result = SelectRespawnPointImpl(world, team);
+	if (!result && team != 0)
+		result = SelectRespawnPointImpl(world, 0); // no spawn points of our team - use the neutral ones
+	if (!result)
+		result = SelectRespawnPointImpl(world, -1); // nothing neutral either (team-only map) - use any
+	return result;
+}
+
+// team: 0 - neutral points only, -1 - any point, otherwise points of that team or neutral
+static GC_SpawnPoint* SelectRespawnPointImpl(World &world, int team)
 {
 	std::vector<GC_SpawnPoint*> points;
 
@@ -109,7 +122,7 @@ static GC_SpawnPoint* SelectRespawnPoint(World &world, int team)
 	FOREACH( world.GetList(LIST_respawns), GC_SpawnPoint, object )
 	{
 		GC_SpawnPoint *spawnPoint = (GC_SpawnPoint*) object;
-		if( spawnPoint->_team && (spawnPoint->_team != team) )
+		if( team != -1 && spawnPoint->_team && (spawnPoint->_team != team) )
 			continue;
 
 		float dist = -1;

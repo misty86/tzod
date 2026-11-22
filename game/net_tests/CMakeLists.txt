@@ -4,6 +4,7 @@ project(NetGameTests)
 add_executable(netgame_tests
 	Lockstep_tests.cpp
 	NetworkGame_tests.cpp
+	Spawn_tests.cpp
 )
 
 if(WIN32)

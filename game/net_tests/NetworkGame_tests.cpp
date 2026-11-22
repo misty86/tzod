@@ -20,6 +20,7 @@ using TestFileSystem = FS::FileSystemPosix;
 #endif
 #include <gtest/gtest.h>
 #include <chrono>
+#include <cstdlib>
 #include <filesystem>
 #include <thread>
 
@@ -29,7 +30,7 @@ namespace
 	constexpr float c_tickRate = 60;
 	constexpr unsigned c_inputDelay = 3;
 	constexpr float c_dt = 1.0f / c_tickRate;
-	constexpr const char *c_mapName = "dm1";
+	const char *c_mapName = getenv("TZOD_TEST_MAP") ? getenv("TZOD_TEST_MAP") : "dm1";
 
 	std::shared_ptr<FS::FileSystem> MakeDataFileSystem()
 	{
