@@ -295,6 +295,9 @@ void Desktop::OnCreateGame()
 
 void Desktop::HostGameOnMap(std::string mapName, float autoStartDelay)
 {
+	// the previous game or lobby may still be alive as the staging window of the nav stack
+	// and hold the port; release it first
+	_navStack->Trim();
 	try
 	{
 		auto session = std::make_shared<Net::HostSession>(
