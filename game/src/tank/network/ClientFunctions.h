@@ -14,7 +14,8 @@ enum ClientFunction
 	CL_POST_STARTGAME,     // bool -- dummy
 	CL_POST_ADDBOT,        // BotDesc
 	CL_POST_PLAYERINFO,    // PlayerDescEx
-	CL_POST_SETBOOST,      // float
+	CL_POST_LEADING,       // float -- how often (0..1) your packets were already waiting when a frame was sent
+	CL_POST_YOUARELAST,    // bool -- your control packet was the last one the server waited for
 };
 
 

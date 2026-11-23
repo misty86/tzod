@@ -268,6 +268,9 @@ Level::Level()
   , _frozen(false)
   , _safeMode(true)
   , _ctrlSentCount(0)
+  , _autoLatencyStarve(0)
+  , _autoLatencyIdle(0)
+  , _autoLatencyHold(0)
   , _locationsX(0)
   , _locationsY(0)
   , _sx(0)
@@ -356,6 +359,9 @@ void Level::Clear()
 	_ctrlSentCount = 0;
 	_time = 0;
 	_timeBuffer = 0;
+	_autoLatencyStarve = 0;
+	_autoLatencyIdle = 0;
+	_autoLatencyHold = 0;
 	_limitHit = false;
 	_frozen = false;
 	_gameType = -1;
@@ -1112,11 +1118,73 @@ void Level::Step(const ControlPacketVector &ctrl, float dt)
 			FOREACH( GetList(LIST_players), GC_Player, p )
 			{
 				if( p->GetVehicle() )
-					TRACE("frame %d: %s at (%.0f, %.0f)", _frame, p->GetNick().c_str(), p->GetVehicle()->GetPos().x, p->GetVehicle()->GetPos().y);
+					TRACE("frame %d (t=%u ms): %s at (%.0f, %.0f)", _frame, GetTickCount(), p->GetNick().c_str(), p->GetVehicle()->GetPos().x, p->GetVehicle()->GetPos().y);
 			}
 		}
 	}
 #endif
+}
+
+// Adjusts cl_latency (the number of control packets kept in flight) to the connection.
+// Each simulation step needs a packet from every player, so with a zero reserve the game
+// runs at most one step per round trip. Waiting for packets raises the reserve quickly;
+// a long period with spare packets in the queue lowers it again, one frame at a time.
+void Level::AutoLatency(float dt, bool starved)
+{
+	if( !g_conf.cl_autolatency.Get() || !g_client || !g_client->_gameStarted )
+		return;
+
+	_autoLatencyHold -= dt;
+
+	if( starved )
+	{
+		// waiting is our fault only if the server was waiting for our packet; otherwise another
+		// player is late and a bigger reserve on our side would not help
+		if( g_client->WasLastRecently() )
+			_autoLatencyStarve += dt;
+		_autoLatencyIdle = 0;
+	}
+	else
+	{
+		_autoLatencyStarve = __max(0.0f, _autoLatencyStarve - dt * 0.5f);
+		// our packets were already waiting at the server on nearly every frame: the reserve is too big
+		if( g_client->GetLeading() > 0.9f )
+			_autoLatencyIdle += dt;
+		else
+			_autoLatencyIdle = __max(0.0f, _autoLatencyIdle - dt);
+	}
+
+	if( _autoLatencyHold > 0 )
+		return;
+
+	int latency = g_conf.cl_latency.GetInt();
+	int maxLatency = __max(1, g_conf.sv_fps.GetInt()); // one second of input delay at most
+	int newLatency = latency;
+
+	if( _autoLatencyStarve > 0.1f && latency < maxLatency )
+	{
+		newLatency = latency + 1;          // 100 ms of waiting: add a packet right away
+		_autoLatencyHold = 1.0f;           // let the pipeline fill before judging again
+	}
+	else if( _autoLatencyIdle > 10.0f && latency > 0 )
+	{
+		newLatency = latency - 1;          // 10 s of being ahead: try a shorter delay
+		_autoLatencyHold = 6.0f;           // the server statistic spans about 4 s
+	}
+
+	if( newLatency != latency )
+	{
+		_autoLatencyStarve = 0;
+		_autoLatencyIdle = 0;
+		g_conf.cl_latency.SetInt(newLatency);
+		TRACE("cl: input delay %d -> %d frames", latency, newLatency);
+		if( g_gui )
+		{
+			char buf[128];
+			sprintf_s(buf, g_lang.net_msg_auto_latency.Get().c_str(), newLatency);
+			static_cast<UI::Desktop*>(g_gui->GetDesktop())->GetMsgArea()->WriteLine(buf);
+		}
+	}
 }
 
 void Level::TimeStep(float dt)
@@ -1208,9 +1276,8 @@ void Level::TimeStep(float dt)
 	if( g_client ) g_client->GetStatistics(&stats);
 	counterBytesPending.Push((float) stats.bytesPending);
 
-	static int filter = 0;
-
 	assert(_ctrlSentCount > 0);
+	bool starved = false; // wanted to step but the control packet has not arrived yet
 	if( _timeBuffer + dt_fixed / 2 > 0 )
 	{
 		do
@@ -1222,26 +1289,16 @@ void Level::TimeStep(float dt)
 			}
 			else
 			{
-				++filter;
-				if( filter > 100 )
-				{
-				//	g_conf.cl_latency.SetInt(std::min(g_conf.cl_latency.GetInt() + 1, g_conf.sv_fps.GetInt()));
-					filter = 0;
-				}
+				starved = true;
 				break;
 			}
 		} while( _timeBuffer > 0 && _ctrlSentCount > 0 );
 	}
 
-	if( g_client ) g_client->GetStatistics(&stats);
-	if( stats.bytesPending && _timeBuffer <= 0 )
+	if( g_client )
 	{
-		++filter;
-		if( filter > 100 )
-		{
-		//	g_conf.cl_latency.SetInt(std::max(0, g_conf.cl_latency.GetInt() - 1));
-			filter = 0;
-		}
+		g_client->GetStatistics(&stats);
+		AutoLatency(dt, starved);
 	}
 
 
@@ -1585,10 +1642,6 @@ bool Level::AbstractClient::Recv(ControlPacketVector &result)
 
 float Level::AbstractClient::GetBoost() const
 {
-	if( g_client )
-	{
-		return g_client->GetBoost();
-	}
 	return g_conf.cl_boost.GetFloat();
 }
 

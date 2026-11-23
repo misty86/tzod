@@ -258,6 +258,12 @@ public:
 	Field _field;
 
 	int  _ctrlSentCount;
+
+	// automatic cl_latency: seconds spent waiting for packets / seconds with spare packets / cooldown after a change
+	float _autoLatencyStarve;
+	float _autoLatencyIdle;
+	float _autoLatencyHold;
+	void AutoLatency(float dt, bool starved);
 	bool  _safeMode;
 
 /////////////////////////////////////////////////////

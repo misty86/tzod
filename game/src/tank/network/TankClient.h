@@ -30,7 +30,7 @@ public:
 	SafePtr<Peer> _peer;
 	int _frame;
 	ControlPacketVector _ctrl;
-	float _boost;
+	float _leading;
 	bool _hasCtrl;
 	bool _gameStarted;
 
@@ -48,7 +48,9 @@ public:
 	~TankClient(void);
 
 	unsigned short GetId() const { return _clientId; }
-	float GetBoost() const { return _boost; }
+	float GetLeading() const { return _leading; } // 0..1, see CL_POST_LEADING
+	bool WasLastRecently() const; // the server waited for us within the last half second
+	DWORD _lastArrivalTick;
 
 	void Connect(const string_t &hostaddr);
 	void ShutDown();
@@ -58,6 +60,8 @@ public:
 	void SendPlayerInfo(const PlayerDesc &pd);
 	void SendTextMessage(const std::string &msg);
 	void SendControl(const ControlPacket &cp); // вызов функции завершает кадр
+	void FlushDelayedControl(); // --fakelag test aid
+	std::deque<std::pair<DWORD, ControlPacket> > _delayedCtrl;
 	bool RecvControl(ControlPacketVector &result);
 
 	void GetStatistics(NetworkStats *pStats);
@@ -84,7 +88,8 @@ private:
 	void ClStartGame(Peer *from, int task, const Variant &arg);
 	void ClAddBot(Peer *from, int task, const Variant &arg);
 	void ClSetPlayerInfo(Peer *from, int task, const Variant &arg);
-	void ClSetBoost(Peer *from, int task, const Variant &arg);
+	void ClLeading(Peer *from, int task, const Variant &arg);
+	void ClYouAreLast(Peer *from, int task, const Variant &arg);
 };
 
 ///////////////////////////////////////////////////////////////////////////////

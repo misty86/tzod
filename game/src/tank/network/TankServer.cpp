@@ -283,7 +283,6 @@ void TankServer::SendFrame()
 		if( (*it1)->descValid )
 		{
 			(*it1)->Post(CL_POST_CONTROL, arg);
-			(*it1)->Post(CL_POST_SETBOOST, Variant((*it1)->clboost));
 		}
 	}
 
@@ -324,7 +323,7 @@ std::string TankServer::GetStats() const
 	{
 		if( (*it)->descValid )
 		{
-			s << (*it)->desc.nick << ":" << (*it)->leading.Count() << " (boost:" << (*it)->clboost << ") ";
+			s << (*it)->desc.nick << ":" << (*it)->leading.Count() << " ";
 		}
 	}
 	return s.str();
@@ -357,23 +356,19 @@ void TankServer::SvControl(Peer *from, int task, const Variant &arg)
 		++_frameReadyCount;
 		if( _frameReadyCount == _connectedCount )
 		{
+			if( _connectedCount > 1 )
+				who->Post(CL_POST_YOUARELAST, Variant(true)); // everybody else was waiting for this player
 			SendFrame();
 			assert(!_connectedCount || _frameReadyCount != _connectedCount);
-			float sum = 0;
+			// The 1.51 "boost" that scaled each client's game speed by this statistic diverged as soon as
+			// a client kept a reserve of packets (cl_latency > 0) and froze the game. Now the clients only
+			// learn how often they were ahead and use it to trim their input delay (Level::AutoLatency).
 			for( PeerList::const_iterator it = _clients.begin(); it != _clients.end(); ++it )
 			{
 				if( (*it)->descValid )
 				{
 					(*it)->leading.Push((*it)->GetPending() > 0);
-					(*it)->clboost -= g_conf.sv_sensitivity.GetFloat() * (float) (*it)->leading.Count() / (*it)->leading.GetCapacity();
-					sum += (*it)->clboost;
-				}
-			}
-			for( PeerList::const_iterator it = _clients.begin(); it != _clients.end(); ++it )
-			{
-				if( (*it)->descValid )
-				{
-					(*it)->clboost /= sum / (float) _connectedCount;
+					(*it)->Post(CL_POST_LEADING, Variant((float) (*it)->leading.Count() / (float) (*it)->leading.GetCapacity()));
 				}
 			}
 		}

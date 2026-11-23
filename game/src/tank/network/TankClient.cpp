@@ -32,10 +32,11 @@
 TankClient::TankClient(void)
   : _frame(0)
   , _clientId(0)
-  , _boost(1)
+  , _leading(0)
   , _gameStarted(false)
   , _latency(1)
   , _hasCtrl(false)
+  , _lastArrivalTick(0)
 {
 	ZeroMemory(&_stats, sizeof(NetworkStats));
 }
@@ -113,7 +114,8 @@ void TankClient::Connect(const string_t &hostaddr)
 	_peer->RegisterHandler(CL_POST_STARTGAME, VariantTypeId<bool>(), CreateDelegate(&TankClient::ClStartGame, this));
 	_peer->RegisterHandler(CL_POST_ADDBOT, VariantTypeId<BotDesc>(), CreateDelegate(&TankClient::ClAddBot, this));
 	_peer->RegisterHandler(CL_POST_PLAYERINFO, VariantTypeId<PlayerDescEx>(), CreateDelegate(&TankClient::ClSetPlayerInfo, this));
-	_peer->RegisterHandler(CL_POST_SETBOOST, VariantTypeId<float>(), CreateDelegate(&TankClient::ClSetBoost, this));
+	_peer->RegisterHandler(CL_POST_LEADING, VariantTypeId<float>(), CreateDelegate(&TankClient::ClLeading, this));
+	_peer->RegisterHandler(CL_POST_YOUARELAST, VariantTypeId<bool>(), CreateDelegate(&TankClient::ClYouAreLast, this));
 
 	if( int err = _peer->Connect(&addr) )
 	{
@@ -160,7 +162,10 @@ void TankClient::SendControl(const ControlPacket &cp)
 	//	return;     // skip packet
 	//}
 
-	_peer->Post(SV_POST_CONTROL, Variant(cp));
+	if( g_cmdline.fakeLag > 0 )
+		_delayedCtrl.push_back(std::make_pair(timeGetTime() + g_cmdline.fakeLag, cp));
+	else
+		_peer->Post(SV_POST_CONTROL, Variant(cp));
 	_frame++;
 
 
@@ -190,6 +195,8 @@ void TankClient::SendPlayerInfo(const PlayerDesc &pd)
 
 void TankClient::GetStatistics(NetworkStats *pStats)
 {
+	if( !_delayedCtrl.empty() )
+		FlushDelayedControl();
 	pStats->bytesSent = _peer->GetTrafficOut();
 	pStats->bytesRecv = _peer->GetTrafficIn();
 	pStats->bytesPending = _peer->GetPending();
@@ -427,13 +434,35 @@ void TankClient::ClControl(Peer *from, int task, const Variant &arg)
 	_peer->Pause();
 }
 
-void TankClient::ClSetBoost(Peer *from, int task, const Variant &arg)
+void TankClient::ClLeading(Peer *from, int task, const Variant &arg)
 {
-	_boost = arg.Value<float>();
+	_leading = arg.Value<float>();
+}
+
+void TankClient::ClYouAreLast(Peer *from, int task, const Variant &arg)
+{
+	_lastArrivalTick = timeGetTime();
+}
+
+bool TankClient::WasLastRecently() const
+{
+	return _lastArrivalTick && timeGetTime() - _lastArrivalTick < 500;
+}
+
+void TankClient::FlushDelayedControl()
+{
+	DWORD now = timeGetTime();
+	while( !_delayedCtrl.empty() && (int) (now - _delayedCtrl.front().first) >= 0 )
+	{
+		_peer->Post(SV_POST_CONTROL, Variant(_delayedCtrl.front().second));
+		_delayedCtrl.pop_front();
+	}
 }
 
 bool TankClient::RecvControl(ControlPacketVector &result)
 {
+	if( !_delayedCtrl.empty() )
+		FlushDelayedControl();
 	if( !_hasCtrl )
 	{
 		_peer->Resume();

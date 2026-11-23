@@ -195,6 +195,7 @@ REFLECTION_BEGIN(LangCache)
 	VAR_STR( net_msg_connection_failed, "Connection failed." )
 	VAR_STR( net_msg_connection_established, "Connection established" )
 	VAR_STR( net_msg_starting_game, "All players ready. Starting game..." )
+	VAR_STR( net_msg_auto_latency, "Network input delay: %d frames" )
 
 
 	//

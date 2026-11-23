@@ -221,6 +221,7 @@ int APIENTRY WinMain( HINSTANCE, // hInstance
 	g_cmdline.autoReady = 0;
 	g_cmdline.bots = 0;
 	g_cmdline.autoDrive = false;
+	g_cmdline.fakeLag = 0;
 	for( int i = 1; i < __argc; ++i )
 	{
 		bool hasValue = i + 1 < __argc;
@@ -238,6 +239,8 @@ int APIENTRY WinMain( HINSTANCE, // hInstance
 			g_cmdline.bots = atoi(__argv[++i]);
 		else if( 0 == strcmp(__argv[i], "--autodrive") )
 			g_cmdline.autoDrive = true;
+		else if( 0 == strcmp(__argv[i], "--fakelag") && hasValue )
+			g_cmdline.fakeLag = atoi(__argv[++i]);
 	}
 
 	GetConsole().SetLog(new ConsoleLog(g_cmdline.log.c_str()));

@@ -95,6 +95,7 @@ struct CmdLineOptions
 	int autoReady;          // --autoready <n>     press Ready once <n> players are in the lobby
 	int bots;               // --bots <n>          add <n> bots after joining the lobby (host side test aid)
 	bool autoDrive;         // --autodrive         hold the W key down (test aid)
+	int fakeLag;            // --fakelag <ms>      delay outgoing control packets (test aid)
 };
 
 extern CmdLineOptions g_cmdline;
