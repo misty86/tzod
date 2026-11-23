@@ -46,3 +46,4 @@ Android/local.properties
 /build/
 /build-release/
 /dist/
+/legacy-1.51/
