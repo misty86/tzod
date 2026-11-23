@@ -1,4 +1,5 @@
 // stdafx.h
+#pragma once
 ///////////////////////////////////////////////////////////////////////////////
 
 #define _WIN32_WINDOWS  0x0410 // windows 98
@@ -68,7 +69,8 @@
 #endif
 
 #include <functional>
-using namespace std::tr1::placeholders; // _1, _2, etc.
+#include <memory>
+using namespace std::placeholders; // _1, _2, etc.
 
 
 #include <cmath>

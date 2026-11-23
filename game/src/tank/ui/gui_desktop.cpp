@@ -125,8 +125,8 @@ Desktop::Desktop(LayoutManager* manager)
 	_editor->SetVisible(false);
 
 	_con = Console::Create(this, 10, 0, 100, 100, &GetConsole());
-	_con->eventOnSendCommand = std::tr1::bind( &Desktop::OnCommand, this, _1 );
-	_con->eventOnRequestCompleteCommand = std::tr1::bind( &Desktop::OnCompleteCommand, this, _1, _2, _3 );
+	_con->eventOnSendCommand = std::bind( &Desktop::OnCommand, this, _1 );
+	_con->eventOnRequestCompleteCommand = std::bind( &Desktop::OnCompleteCommand, this, _1, _2, _3 );
 	_con->SetVisible(false);
 	_con->SetTopMost(true);
 	SpriteColor colors[] = {0xffffffff, 0xffff7fff};
@@ -138,11 +138,11 @@ Desktop::Desktop(LayoutManager* manager)
 
 
 	_fps = new FpsCounter(this, 0, 0, alignTextLB);
-	g_conf.ui_showfps.eventChange = std::tr1::bind(&Desktop::OnChangeShowFps, this);
+	g_conf.ui_showfps.eventChange = std::bind(&Desktop::OnChangeShowFps, this);
 	OnChangeShowFps();
 
 	_time = new TimeElapsed(this, 0, 0, alignTextRB);
-	g_conf.ui_showtime.eventChange = std::tr1::bind(&Desktop::OnChangeShowTime, this);
+	g_conf.ui_showtime.eventChange = std::bind(&Desktop::OnChangeShowTime, this);
 	OnChangeShowTime();
 
 	if( g_conf.dbg_graph.Get() )
@@ -234,7 +234,7 @@ bool Desktop::OnRawChar(int c)
 		{
 			dlg = new MainMenuDlg(this);
 			SetDrawBackground(true);
-			dlg->eventClose = std::tr1::bind(&Desktop::OnCloseChild, this, _1);
+			dlg->eventClose = std::bind(&Desktop::OnCloseChild, this, _1);
 		}
 		break;
 
@@ -259,7 +259,7 @@ bool Desktop::OnRawChar(int c)
 		{
 			dlg = new MapSettingsDlg(this);
 			SetDrawBackground(true);
-			dlg->eventClose = std::tr1::bind(&Desktop::OnCloseChild, this, _1);
+			dlg->eventClose = std::bind(&Desktop::OnCloseChild, this, _1);
 		}
 		break;
 

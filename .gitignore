@@ -1,0 +1,8 @@
+# build output and run-time files of the legacy 1.51.3 port
+/game/build/
+/game/build-*/
+/game/config.cfg
+/game/log.txt
+/game/screenshots/
+# release sounds are ogg-encoded copies of the wav sources
+/game/data/sounds/**/*.ogg

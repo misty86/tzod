@@ -285,8 +285,8 @@ Level::Level()
 	TRACE("Constructing the level");
 
 	// register config handlers
-	g_conf.s_volume.eventChange = std::tr1::bind(&Level::OnChangeSoundVolume, this);
-	g_conf.sv_nightmode.eventChange = std::tr1::bind(&Level::OnChangeNightMode, this);
+	g_conf.s_volume.eventChange = std::bind(&Level::OnChangeSoundVolume, this);
+	g_conf.sv_nightmode.eventChange = std::bind(&Level::OnChangeNightMode, this);
 }
 
 void Level::AddEditorModeListener(IEditorModeListener *ls)
@@ -829,7 +829,7 @@ void Level::SetEditorMode(bool editorModeEnable)
 		bool paused = IsGamePaused();
 		_modeEditor = editorModeEnable;
 		std::for_each(_editorModeListeners.begin(), _editorModeListeners.end(),
-			std::bind2nd(std::mem_fun1(&IEditorModeListener::OnEditorModeChanged), _modeEditor));
+			[this](IEditorModeListener *l) { l->OnEditorModeChanged(_modeEditor); });
 		if( !paused ^ !IsGamePaused() )
 		{
 			PauseSound(IsGamePaused());

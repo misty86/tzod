@@ -413,6 +413,7 @@ bool ZodApp::Pre()
 	{
 		std::ostringstream ss;
 		ss << "DirectSound init: " << e.what();
+		GetConsole().WriteLine(1, ss.str());
 		MessageBox(g_env.hMainWnd, ss.str().c_str(), TXT_VERSION, MB_ICONERROR|MB_OK);
 		return false;
 	}
