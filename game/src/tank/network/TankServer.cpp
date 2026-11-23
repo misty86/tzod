@@ -241,16 +241,27 @@ void TankServer::SendFrame()
 	ControlPacketVector &ctrl = arg.Value<ControlPacketVector>();
 	ctrl.resize(_connectedCount);
 
+	// Every peer applies the packets to its human players in player creation order, which is the
+	// order of the CL_POST_PLAYERINFO posts in _players. The old code used the reversed accept order
+	// of _clients, so with two players each one drove the other's tank.
 	int i = 0;
-	for( PeerList::iterator it = _clients.begin(); it != _clients.end(); ++it )
+	for( std::vector<PostType>::iterator pit = _players.begin(); pit != _players.end(); ++pit )
 	{
-		if( !(*it)->descValid ) continue;
+		if( CL_POST_PLAYERINFO != pit->first ) continue;
+		unsigned short id = pit->second.Value<PlayerDescEx>().id;
+		PeerList::iterator it = _clients.begin();
+		for( ; it != _clients.end(); ++it )
+		{
+			if( (*it)->descValid && (*it)->id == id ) break;
+		}
+		assert(it != _clients.end());
+		if( it == _clients.end() ) continue;
 		const ControlPacket &cp = (*it)->ctrl;
-		++i;
-		ctrl[_connectedCount - i] = cp;
+		assert(i < _connectedCount);
+		ctrl[i++] = cp;
 
 #ifdef NETWORK_DEBUG
-		FrameToCSMap::_Pairib ib = _frame2cs.insert(FrameToCSMap::value_type(cp.frame, cp.checksum));
+		std::pair<FrameToCSMap::iterator, bool> ib = _frame2cs.insert(FrameToCSMap::value_type(cp.frame, cp.checksum));
 		if( !ib.second && ib.first->second != cp.checksum )
 		{
 			TRACE("sv: sync error detected at frame %u!", cp.frame);
@@ -391,7 +402,7 @@ void TankServer::SvPlayerReady(Peer *from, int task, const Variant &arg)
 
 	if( bAllPlayersReady )
 	{
-		// запрещение приема новых подключений
+		// пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 		_socketListen.Close();
 		if( _announcer )
 		{

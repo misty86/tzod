@@ -139,6 +139,46 @@ CreateServerDlg::~CreateServerDlg()
 {
 }
 
+bool StartHostedGame(const string_t &fn, int fragLimit, int timeLimit, int svFps, bool nightMode, const SafePtr<LobbyClient> &announcer)
+{
+	script_exec(g_env.L, "reset()");
+
+	string_t path = DIR_MAPS;
+	path += "\\";
+	path += fn + ".map";
+
+	GameInfo gi = {0};
+	memcpy(gi.exeVer, g_md5.bytes, 16);
+	gi.seed       = rand();
+	gi.fraglimit  = __max(0, __min(MAX_FRAGLIMIT, fragLimit));
+	gi.timelimit  = __max(0, __min(MAX_TIMELIMIT, timeLimit));
+	gi.server_fps = __max(MIN_NETWORKSPEED, __min(MAX_NETWORKSPEED, svFps));
+	gi.nightmode  = nightMode;
+
+	strcpy(gi.cMapName, fn.c_str());
+	strcpy(gi.cServerName, "ZOD Server");
+
+	assert(NULL == g_server);
+	try
+	{
+		SafePtr<FS::MemMap> m = g_fs->Open(path)->QueryMap();
+		MD5_CTX md5;
+		MD5Init(&md5);
+		MD5Update(&md5, m->GetData(), m->GetSize());
+		MD5Final(&md5);
+		memcpy(gi.mapVer, md5.digest, 16);
+
+		g_server = new TankServer(gi, announcer);
+	}
+	catch( const std::exception &e )
+	{
+		TRACE("%s", e.what());
+		MessageBox(g_env.hMainWnd, g_lang.net_server_error.Get().c_str(), TXT_VERSION, MB_OK|MB_ICONERROR);
+		return false;
+	}
+	return true;
+}
+
 void CreateServerDlg::OnOK()
 {
 	string_t fn;
@@ -165,40 +205,8 @@ void CreateServerDlg::OnOK()
 		announcer->SetLobbyUrl(g_conf.sv_lobby.Get());
 	}
 
-	script_exec(g_env.L, "reset()");
-
-
-	string_t path = DIR_MAPS;
-	path += "\\";
-	path += fn + ".map";
-
-	GameInfo gi = {0};
-	memcpy(gi.exeVer, g_md5.bytes, 16);
-	gi.seed       = rand();
-	gi.fraglimit  = __max(0, __min(MAX_FRAGLIMIT, _fragLimit->GetInt()));
-	gi.timelimit  = __max(0, __min(MAX_TIMELIMIT, _timeLimit->GetInt()));
-	gi.server_fps = __max(MIN_NETWORKSPEED, __min(MAX_NETWORKSPEED, _svFps->GetInt()));
-	gi.nightmode  = _nightMode->GetCheck();
-
-	strcpy(gi.cMapName, fn.c_str());
-	strcpy(gi.cServerName, "ZOD Server");
-
-	assert(NULL == g_server);
-	try
+	if( !StartHostedGame(fn, _fragLimit->GetInt(), _timeLimit->GetInt(), _svFps->GetInt(), _nightMode->GetCheck(), announcer) )
 	{
-		SafePtr<FS::MemMap> m = g_fs->Open(path)->QueryMap();
-		MD5_CTX md5;
-		MD5Init(&md5);
-		MD5Update(&md5, m->GetData(), m->GetSize());
-		MD5Final(&md5);
-		memcpy(gi.mapVer, md5.digest, 16);
-
-		g_server = new TankServer(gi, announcer);
-	}
-	catch( const std::exception &e )
-	{
-		TRACE("%s", e.what());
-		MessageBox(g_env.hMainWnd, g_lang.net_server_error.Get().c_str(), TXT_VERSION, MB_OK|MB_ICONERROR);
 		return;
 	}
 
@@ -453,8 +461,17 @@ void InternetDlg::OnCloseChild(int result)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-static PlayerDesc GetPlayerDescFromConf(const ConfPlayerBase &p)
+static PlayerDesc GetPlayerDescFromConf(ConfPlayerBase &p)
 {
+	if( p.skin.Get().empty() )
+	{
+		// the profile has never been edited: pick a random skin like the single player dialog does
+		std::vector<string_t> skinNames;
+		g_texman->GetTextureNames(skinNames, "skin/", true);
+		if( !skinNames.empty() )
+			p.skin.Set(skinNames[rand() % skinNames.size()]);
+	}
+
 	PlayerDesc result;
 	result.nick = p.nick.Get();
 	result.cls = p.platform_class.Get();
@@ -471,6 +488,7 @@ WaitingForPlayersDlg::WaitingForPlayersDlg(Window *parent)
   , _chat(NULL)
   , _btnOK(NULL)
   , _btnProfile(NULL)
+  , _autoReadySent(false)
 {
 	assert(g_client);
 	g_client->eventErrorMessage.bind(&WaitingForPlayersDlg::OnError, this);
@@ -531,6 +549,19 @@ WaitingForPlayersDlg::WaitingForPlayersDlg(Window *parent)
 	g_client->SendPlayerInfo(GetPlayerDescFromConf(g_conf.cl_playerinfo));
 
 	// send ping request
+
+	// --bots <n>: add bots without the dialog
+	for( ; g_cmdline.bots > 0; --g_cmdline.bots )
+	{
+		BotDesc bd;
+		bd.pd = GetPlayerDescFromConf(g_conf.ui_netbotinfo);
+		bd.pd.skin.clear(); // pick a different random skin for every bot
+		g_conf.ui_netbotinfo.skin.Set("");
+		bd.pd = GetPlayerDescFromConf(g_conf.ui_netbotinfo);
+		bd.level = g_conf.ui_netbotinfo.level.GetInt();
+		g_client->SendAddBot(bd);
+	}
+
 //	DWORD t = timeGetTime();
 //	g_client->SendDataToServer(DataWrap(t, DBTYPE_PING));
 }
@@ -687,6 +718,13 @@ void WaitingForPlayersDlg::OnPlayersUpdate()
 	}
 
 	_btnOK->SetEnabled(_players->GetData()->GetItemCount() > 0);
+
+	// --autoready <n>: press the button once enough players have gathered
+	if( g_cmdline.autoReady > 0 && !_autoReadySent && _players->GetData()->GetItemCount() >= g_cmdline.autoReady )
+	{
+		_autoReadySent = true;
+		OnOK();
+	}
 }
 
 void WaitingForPlayersDlg::OnStartGame()

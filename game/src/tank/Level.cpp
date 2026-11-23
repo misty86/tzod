@@ -36,6 +36,7 @@
 #include "gc/GameClasses.h"
 #include "gc/RigidBodyDinamic.h"
 #include "gc/Player.h"
+#include "gc/Vehicle.h"
 #include "gc/Sound.h"
 #include "gc/Camera.h"
 
@@ -1106,6 +1107,14 @@ void Level::Step(const ControlPacketVector &ctrl, float dt)
 		}
 		_checksum = dwCheckSum;
 		fflush(_dump);
+		if( 0 == _frame % 30 )
+		{
+			FOREACH( GetList(LIST_players), GC_Player, p )
+			{
+				if( p->GetVehicle() )
+					TRACE("frame %d: %s at (%.0f, %.0f)", _frame, p->GetNick().c_str(), p->GetVehicle()->GetPos().x, p->GetVehicle()->GetPos().y);
+			}
+		}
 	}
 #endif
 }
@@ -1499,7 +1508,8 @@ void Level::DbgLine(const vec2d &v1, const vec2d &v2, SpriteColor color) const
 
 bool Level::IsGamePaused() const
 { 
-	return g_env.pause > 0 /*&& !g_client*/ && _gameType != GT_INTRO 
+	// a local pause (menu, lost focus) must not stop a network game: every peer runs the same lockstep world
+	return g_env.pause > 0 && !g_client && _gameType != GT_INTRO
 		|| _limitHit 
 		|| _modeEditor
 		|| g_client && !g_client->_gameStarted;

@@ -215,7 +215,32 @@ int APIENTRY WinMain( HINSTANCE, // hInstance
 #if 0 // memory leaks detection
 	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
-	GetConsole().SetLog(new ConsoleLog("log.txt"));
+	// command line
+	g_cmdline.log = "log.txt";
+	g_cmdline.config = FILE_CONFIG;
+	g_cmdline.autoReady = 0;
+	g_cmdline.bots = 0;
+	g_cmdline.autoDrive = false;
+	for( int i = 1; i < __argc; ++i )
+	{
+		bool hasValue = i + 1 < __argc;
+		if( 0 == strcmp(__argv[i], "--log") && hasValue )
+			g_cmdline.log = __argv[++i];
+		else if( 0 == strcmp(__argv[i], "--config") && hasValue )
+			g_cmdline.config = __argv[++i];
+		else if( 0 == strcmp(__argv[i], "--host") && hasValue )
+			g_cmdline.hostMap = __argv[++i];
+		else if( 0 == strcmp(__argv[i], "--join") && hasValue )
+			g_cmdline.joinAddr = __argv[++i];
+		else if( 0 == strcmp(__argv[i], "--autoready") && hasValue )
+			g_cmdline.autoReady = atoi(__argv[++i]);
+		else if( 0 == strcmp(__argv[i], "--bots") && hasValue )
+			g_cmdline.bots = atoi(__argv[++i]);
+		else if( 0 == strcmp(__argv[i], "--autodrive") )
+			g_cmdline.autoDrive = true;
+	}
+
+	GetConsole().SetLog(new ConsoleLog(g_cmdline.log.c_str()));
 
 	TCHAR buf[MAX_PATH];
 	GetModuleFileName(NULL, buf, MAX_PATH);
@@ -292,11 +317,11 @@ bool ZodApp::Pre()
 	try
 	{
 		// workaround - check if file exists
-		if( FILE *f = fopen(FILE_CONFIG, "r") )
+		if( FILE *f = fopen(g_cmdline.config.c_str(), "r") )
 		{
 			fclose(f);
 
-			if( !g_conf->GetRoot()->Load(FILE_CONFIG) )
+			if( !g_conf->GetRoot()->Load(g_cmdline.config.c_str()) )
 			{
 				int result = MessageBox(g_env.hMainWnd,
 					"Failed to load config file. See log for details. Default settings will be used.",
@@ -484,6 +509,8 @@ bool ZodApp::Pre()
 
 	g_level->_gameType = GT_INTRO;
 
+	static_cast<UI::Desktop*>(g_gui->GetDesktop())->ApplyCmdLine();
+
 	timer.Start();
 
 	return true;
@@ -492,6 +519,8 @@ bool ZodApp::Pre()
 void ZodApp::Idle()
 {
 	_inputMgr->InquireInputDevices();
+	if( g_cmdline.autoDrive )
+		g_env.envInputs._keys[DIK_W] = true;
 
 	TimeStep(timer.GetDt());
 	RenderFrame(false);
@@ -548,8 +577,8 @@ void ZodApp::Post()
 
 
 	// config
-	TRACE("Saving config to '" FILE_CONFIG "'");
-	if( !g_conf->GetRoot()->Save(FILE_CONFIG) )
+	TRACE("Saving config to '%s'", g_cmdline.config.c_str());
+	if( !g_conf->GetRoot()->Save(g_cmdline.config.c_str()) )
 	{
 		MessageBox(NULL, "Failed to save config file", TXT_VERSION, MB_ICONERROR);
 	}

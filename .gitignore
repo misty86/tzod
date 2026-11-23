@@ -6,3 +6,6 @@
 /game/screenshots/
 # release sounds are ogg-encoded copies of the wav sources
 /game/data/sounds/**/*.ogg
+/game/network_dump_*.txt
+/game/*.log
+/game/*.cfg

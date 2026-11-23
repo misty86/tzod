@@ -12,6 +12,9 @@ namespace UI
 {
 ///////////////////////////////////////////////////////////////////////////////
 
+// creates g_server for the map (file name without extension); shows a message box and returns false on error
+bool StartHostedGame(const string_t &mapName, int fragLimit, int timeLimit, int svFps, bool nightMode, const SafePtr<LobbyClient> &announcer);
+
 // forward declarations
 class ListDataSourceMaps;
 
@@ -111,6 +114,7 @@ class WaitingForPlayersDlg : public Dialog
 
 	static const size_t _maxPings = 5;
 	std::vector<DWORD> _pings;
+	bool _autoReadySent;
 
 public:
 	WaitingForPlayersDlg(Window *parent);

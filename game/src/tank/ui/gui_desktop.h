@@ -11,6 +11,7 @@ namespace UI
 	class EditorLayout;
 	class Console;
 	class ScoreTable;
+	class MainMenuDlg;
 
 	// widgets
 	class FpsCounter;
@@ -66,6 +67,7 @@ class Desktop
 	MessageArea  *_msg;
 	ScoreTable   *_score;
 
+	MainMenuDlg  *_mainMenu;
 	FpsCounter   *_fps;
 	TimeElapsed  *_time;
 
@@ -81,6 +83,7 @@ public:
 	void ShowConsole(bool show);
 
 	void OnCloseChild(int result);
+	void ApplyCmdLine(); // --host / --join after startup
 
 	MessageArea* GetMsgArea() const;
 

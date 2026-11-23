@@ -25,6 +25,7 @@
 
 #include "network/TankClient.h"
 #include "network/TankServer.h"
+#include "network/LobbyClient.h"
 
 #include "Level.h"
 #include "Macros.h"
@@ -50,7 +51,7 @@ MainMenuDlg::MainMenuDlg(Window *parent)
 	OnParentSize(parent->GetWidth(), parent->GetHeight());
 
 	Button::Create(this, g_lang.single_player_btn.Get(), 0, GetHeight())->eventClick.bind(&MainMenuDlg::OnSinglePlayer, this);
-	Button::Create(this, g_lang.network_btn.Get(), 100, GetHeight())/*->eventClick.bind(&MainMenuDlg::OnMultiPlayer, this)*/->SetEnabled(false);
+	Button::Create(this, g_lang.network_btn.Get(), 100, GetHeight())->eventClick.bind(&MainMenuDlg::OnMultiPlayer, this);
 	Button::Create(this, g_lang.editor_btn.Get(), 200, GetHeight())->eventClick.bind(&MainMenuDlg::OnEditor, this);
 	Button::Create(this, g_lang.settings_btn.Get(), 300, GetHeight())->eventClick.bind(&MainMenuDlg::OnSettings, this);
 	Button::Create(this, g_lang.exit_game_btn.Get(), 416, GetHeight())->eventClick.bind(&MainMenuDlg::OnExit, this);
@@ -76,6 +77,30 @@ MainMenuDlg::MainMenuDlg(Window *parent)
 	if( !g_level->IsEmpty() && GT_DEATHMATCH == g_level->_gameType )
 	{
 		SwitchPanel(PT_SINGLEPLAYER);
+	}
+}
+
+void MainMenuDlg::ApplyCmdLine()
+{
+	// --host / --join from the command line, applied once after the startup script has run
+	if( !g_cmdline.hostMap.empty() )
+	{
+		string_t map;
+		map.swap(g_cmdline.hostMap);
+		if( StartHostedGame(map, g_conf.sv_fraglimit.GetInt(), g_conf.sv_timelimit.GetInt(),
+		                    g_conf.sv_fps.GetInt(), g_conf.sv_nightmode.Get(), SafePtr<LobbyClient>()) )
+		{
+			SetVisible(false);
+			(new ConnectDlg(GetParent(), "localhost"))->eventClose = std::bind(&MainMenuDlg::OnCloseChild, this, _1);
+		}
+	}
+	else if( !g_cmdline.joinAddr.empty() )
+	{
+		string_t addr;
+		addr.swap(g_cmdline.joinAddr);
+		script_exec(g_env.L, "reset()");
+		SetVisible(false);
+		(new ConnectDlg(GetParent(), addr.c_str()))->eventClose = std::bind(&MainMenuDlg::OnCloseChild, this, _1);
 	}
 }
 

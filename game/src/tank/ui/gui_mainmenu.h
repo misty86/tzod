@@ -15,6 +15,9 @@ class GetFileNameDlg;
 
 class MainMenuDlg : public Dialog
 {
+public:
+	void ApplyCmdLine(); // --host / --join
+protected:
 	void OnSinglePlayer();
 	void OnNewGame();
 	void OnCampaign();

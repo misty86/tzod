@@ -117,6 +117,7 @@ const UI::string_t& Desktop::MyConsoleHistory::GetItem(size_t index) const
 
 Desktop::Desktop(LayoutManager* manager)
   : Window(NULL, manager)
+  , _mainMenu(NULL)
 {
 	SetTexture("ui/window", false);
 	_msg = new MessageArea(this, 100, 100);
@@ -164,6 +165,14 @@ Desktop::Desktop(LayoutManager* manager)
 	OnRawChar(VK_ESCAPE); // to invoke main menu dialog
 }
 
+void Desktop::ApplyCmdLine()
+{
+	if( _mainMenu )
+	{
+		_mainMenu->ApplyCmdLine();
+	}
+}
+
 Desktop::~Desktop()
 {
 	g_conf.ui_showfps.eventChange = NULL;
@@ -195,6 +204,7 @@ void Desktop::ShowConsole(bool show)
 
 void Desktop::OnCloseChild(int result)
 {
+	_mainMenu = NULL; // the dialog destroys itself after this call
 	SetDrawBackground(false);
 }
 
@@ -232,7 +242,7 @@ bool Desktop::OnRawChar(int c)
 		}
 		else
 		{
-			dlg = new MainMenuDlg(this);
+			dlg = _mainMenu = new MainMenuDlg(this);
 			SetDrawBackground(true);
 			dlg->eventClose = std::bind(&Desktop::OnCloseChild, this, _1);
 		}

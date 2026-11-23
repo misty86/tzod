@@ -51,6 +51,10 @@ add_executable(tank WIN32
 )
 target_include_directories(tank PRIVATE src/tank src/shim)
 target_compile_definitions(tank PRIVATE LOGFILE)
+option(TZOD_NETWORK_DEBUG "Per-frame world checksums; the server aborts on the first desync" OFF)
+if(TZOD_NETWORK_DEBUG)
+	target_compile_definitions(tank PRIVATE NETWORK_DEBUG)
+endif()
 target_precompile_headers(tank PRIVATE src/tank/stdafx.h)
 set_source_files_properties(src/tank/Md5.c PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
 target_link_libraries(tank PRIVATE lua zlib oggvorbis

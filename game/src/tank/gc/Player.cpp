@@ -467,7 +467,7 @@ void GC_PlayerLocal::SelectFreeProfile()
 		bool in_use = false;
 		FOREACH(g_level->GetList(LIST_players), GC_Player, player)
 		{
-			if( !player->IsKilled() )
+			if( !player->IsKilled() && player != this )
 			{
 				if( GC_PlayerLocal *p = dynamic_cast<GC_PlayerLocal *>(player) )
 				{
@@ -820,9 +820,15 @@ void GC_PlayerRemote::TimeStepFixed(float dt)
 {
 	GC_PlayerHuman::TimeStepFixed( dt );
 	assert(g_client);
+	// since 1.50 a vehicle with a player is stepped by that player (see GC_Vehicle::SetPlayer);
+	// the remote player did not do it, so other peers' tanks never moved - that is what broke the network game
 	if( GetVehicle() )
 	{
 		GetVehicle()->SetState(_ctrlState);
+		GetVehicle()->TimeStepFixed(dt); // vehicle may die here
+	}
+	if( GetVehicle() )
+	{
 		GetVehicle()->GetVisual()->Sync(GetVehicle()); // FIXME
 	//	GetVehicle()->SetPredictedState(vs);
 	//	GetVehicle()->GetVisual()->TimeStepFixed(dt);

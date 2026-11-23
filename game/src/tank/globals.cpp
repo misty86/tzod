@@ -10,6 +10,7 @@
 MD5 g_md5;
 
 ENVIRONMENT g_env;
+CmdLineOptions g_cmdline;
 
 CSoundManager   *g_soundManager;
 CSound          *g_pSounds[SND_COUNT];

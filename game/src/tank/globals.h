@@ -85,6 +85,20 @@ struct ENVIRONMENT
 
 extern ENVIRONMENT g_env;
 
+// options parsed from the command line (see WinMain)
+struct CmdLineOptions
+{
+	std::string log;        // --log <file>        log file name, default log.txt
+	std::string config;     // --config <file>     config file name, default config.cfg
+	std::string hostMap;    // --host <map>        start a server on the map and join it
+	std::string joinAddr;   // --join <addr[:port]> connect to a server
+	int autoReady;          // --autoready <n>     press Ready once <n> players are in the lobby
+	int bots;               // --bots <n>          add <n> bots after joining the lobby (host side test aid)
+	bool autoDrive;         // --autodrive         hold the W key down (test aid)
+};
+
+extern CmdLineOptions g_cmdline;
+
 ///////////////////////////////////////////////////////////////////////////////
 
 struct MD5
