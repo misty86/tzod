@@ -686,11 +686,19 @@ void WaitingForPlayersDlg::OnPlayersUpdate()
 {
 	size_t count = g_level->GetList(LIST_players).size();
 
+	{
+		int killed = 0;
+		FOREACH(g_level->GetList(LIST_players), GC_Player, p)
+			if( p->IsKilled() ) ++killed;
+		TRACE("lobby: %u players in the list, %d of them killed", (unsigned) count, killed);
+	}
+
 	// TODO: implement via the ListDataSource interface
 	_players->GetData()->DeleteAllItems();
 	_bots->GetData()->DeleteAllItems();
 	FOREACH(g_level->GetList(LIST_players), GC_Player, player)
 	{
+		if( player->IsKilled() ) continue;
 		if( GC_PlayerAI *ai = dynamic_cast<GC_PlayerAI *>(player) )
 		{
 			// nick & skin

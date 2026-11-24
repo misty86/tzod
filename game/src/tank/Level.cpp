@@ -376,6 +376,11 @@ void Level::Clear()
 #endif
 
 	_abstractClient.Reset();
+
+	// Lua userdata holds references to game objects until it is collected (see luaT_pushobject);
+	// the demo bots created by init.lua stayed alive as dead entries of LIST_players otherwise
+	if( g_env.L )
+		lua_gc(g_env.L, LUA_GCCOLLECT, 0);
 }
 
 void Level::HitLimit()
@@ -1059,6 +1064,7 @@ void Level::Step(const ControlPacketVector &ctrl, float dt)
 		ControlPacketVector::const_iterator ctrlIt = ctrl.begin();
 		FOREACH( GetList(LIST_players), GC_Player, p )
 		{
+			if( p->IsKilled() ) continue; // dead objects can linger in the list until they are freed
 			if( GC_PlayerHuman *ph = dynamic_cast<GC_PlayerHuman *>(p) )
 			{
 				VehicleState vs;

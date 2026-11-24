@@ -221,6 +221,7 @@ int APIENTRY WinMain( HINSTANCE, // hInstance
 	g_cmdline.autoReady = 0;
 	g_cmdline.bots = 0;
 	g_cmdline.botsAfter = 0;
+	g_cmdline.delay = 0;
 	g_cmdline.autoDrive = false;
 	g_cmdline.fakeLag = 0;
 	for( int i = 1; i < __argc; ++i )
@@ -240,6 +241,8 @@ int APIENTRY WinMain( HINSTANCE, // hInstance
 			g_cmdline.bots = atoi(__argv[++i]);
 		else if( 0 == strcmp(__argv[i], "--botsafter") && hasValue )
 			g_cmdline.botsAfter = atoi(__argv[++i]);
+		else if( 0 == strcmp(__argv[i], "--delay") && hasValue )
+			g_cmdline.delay = (float) atof(__argv[++i]);
 		else if( 0 == strcmp(__argv[i], "--autodrive") )
 			g_cmdline.autoDrive = true;
 		else if( 0 == strcmp(__argv[i], "--fakelag") && hasValue )
@@ -515,7 +518,8 @@ bool ZodApp::Pre()
 
 	g_level->_gameType = GT_INTRO;
 
-	static_cast<UI::Desktop*>(g_gui->GetDesktop())->ApplyCmdLine();
+	if( g_cmdline.delay <= 0 )
+		static_cast<UI::Desktop*>(g_gui->GetDesktop())->ApplyCmdLine();
 
 	timer.Start();
 
@@ -528,7 +532,10 @@ void ZodApp::Idle()
 	if( g_cmdline.autoDrive )
 		g_env.envInputs._keys[DIK_W] = true;
 
-	TimeStep(timer.GetDt());
+	float dt = timer.GetDt();
+	if( g_cmdline.delay > 0 && (g_cmdline.delay -= dt) <= 0 )
+		static_cast<UI::Desktop*>(g_gui->GetDesktop())->ApplyCmdLine();
+	TimeStep(dt);
 	RenderFrame(false);
 
 	if( g_music )

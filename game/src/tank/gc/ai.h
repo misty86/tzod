@@ -182,6 +182,7 @@ public:
 
 	virtual void OnRespawn();
 	virtual void OnDie();
+	virtual void Kill();
 
 	void debug_draw();
 

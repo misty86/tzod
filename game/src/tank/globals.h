@@ -95,6 +95,7 @@ struct CmdLineOptions
 	int autoReady;          // --autoready <n>     press Ready once <n> players are in the lobby
 	int bots;               // --bots <n>          add <n> bots after joining the lobby (host side test aid)
 	int botsAfter;          // --botsafter <n>     add the bots only once <n> humans are in the lobby
+	float delay;            // --delay <s>         apply --host/--join after <s> seconds of intro instead of at once
 	bool autoDrive;         // --autodrive         hold the W key down (test aid)
 	int fakeLag;            // --fakelag <ms>      delay outgoing control packets (test aid)
 };

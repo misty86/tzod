@@ -313,6 +313,7 @@ void TankClient::ClSetPlayerInfo(Peer *from, int task, const Variant &arg)
 
 	FOREACH(g_level->GetList(LIST_players), GC_Player, p)
 	{
+		if( p->IsKilled() ) continue;
 		if( p->GetNetworkID() == pde.id )
 		{
 			player = p;

@@ -1362,6 +1362,18 @@ void GC_PlayerAI::OnRespawn()
 	SelectFavoriteWeapon();
 }
 
+void GC_PlayerAI::Kill()
+{
+	// a killed object is only freed when nothing references it; bots reference each other's
+	// tanks (targets, attack list), so without this the demo bots of the intro survived Level::Clear
+	// as dead entries of LIST_players and showed up in the network lobby
+	_pickupCurrent = NULL;
+	_attackList.clear();
+	ClearPath();
+	FreeTarget();
+	GC_Player::Kill(); // kills the vehicle, which unregisters us from the job manager via OnDie
+}
+
 void GC_PlayerAI::OnDie()
 {
 	_pickupCurrent = NULL;
