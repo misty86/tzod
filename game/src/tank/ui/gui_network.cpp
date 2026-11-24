@@ -551,16 +551,8 @@ WaitingForPlayersDlg::WaitingForPlayersDlg(Window *parent)
 	// send ping request
 
 	// --bots <n>: add bots without the dialog
-	for( ; g_cmdline.bots > 0; --g_cmdline.bots )
-	{
-		BotDesc bd;
-		bd.pd = GetPlayerDescFromConf(g_conf.ui_netbotinfo);
-		bd.pd.skin.clear(); // pick a different random skin for every bot
-		g_conf.ui_netbotinfo.skin.Set("");
-		bd.pd = GetPlayerDescFromConf(g_conf.ui_netbotinfo);
-		bd.level = g_conf.ui_netbotinfo.level.GetInt();
-		g_client->SendAddBot(bd);
-	}
+	if( 0 == g_cmdline.botsAfter )
+		AddCmdLineBots();
 
 //	DWORD t = timeGetTime();
 //	g_client->SendDataToServer(DataWrap(t, DBTYPE_PING));
@@ -595,6 +587,18 @@ void WaitingForPlayersDlg::OnChangeProfileClick()
 	_btnOK->SetEnabled(false);
 	EditPlayerDlg *dlg = new EditPlayerDlg(GetParent(), g_conf.cl_playerinfo->GetRoot());
 	dlg->eventClose = std::bind(&WaitingForPlayersDlg::OnCloseProfileDlg, this, _1);
+}
+
+void WaitingForPlayersDlg::AddCmdLineBots()
+{
+	for( ; g_cmdline.bots > 0; --g_cmdline.bots )
+	{
+		BotDesc bd;
+		g_conf.ui_netbotinfo.skin.Set(""); // a different random skin for every bot
+		bd.pd = GetPlayerDescFromConf(g_conf.ui_netbotinfo);
+		bd.level = g_conf.ui_netbotinfo.level.GetInt();
+		g_client->SendAddBot(bd);
+	}
 }
 
 void WaitingForPlayersDlg::OnAddBotClick()
@@ -718,6 +722,12 @@ void WaitingForPlayersDlg::OnPlayersUpdate()
 	}
 
 	_btnOK->SetEnabled(_players->GetData()->GetItemCount() > 0);
+
+	if( g_cmdline.botsAfter > 0 && _players->GetData()->GetItemCount() >= g_cmdline.botsAfter )
+	{
+		g_cmdline.botsAfter = 0;
+		AddCmdLineBots();
+	}
 
 	// --autoready <n>: press the button once enough players have gathered
 	if( g_cmdline.autoReady > 0 && !_autoReadySent && _players->GetData()->GetItemCount() >= g_cmdline.autoReady )

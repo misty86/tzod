@@ -221,6 +221,7 @@ void GC_Player::TimeStepFixed(float dt)
 			{
 				char buf[64];
 				wsprintf(buf, g_lang.msg_no_respawns_for_team_x.Get().c_str(), _team);
+				TRACE("player '%s': no respawn point for team %d", _nick.c_str(), _team);
 				static_cast<UI::Desktop*>(g_gui->GetDesktop())->GetMsgArea()->WriteLine(buf);
 				return;
 			}

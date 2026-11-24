@@ -416,6 +416,7 @@ void TankClient::ClAddBot(Peer *from, int task, const Variant &arg)
 	ai->SetTeam(bd.pd.team);
 	ai->SetLevel(std::max(0U, std::min(AI_MAX_LEVEL, bd.level)));
 	ai->UpdateSkin();
+	TRACE("cl: bot '%s' added (team %d, class '%s', skin '%s', level %u)", bd.pd.nick.c_str(), bd.pd.team, bd.pd.cls.c_str(), bd.pd.skin.c_str(), bd.level);
 
 	if( eventPlayersUpdate )
 	{

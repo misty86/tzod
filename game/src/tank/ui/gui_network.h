@@ -125,6 +125,7 @@ protected:
 	void OnCloseProfileDlg(int result);
 	void OnChangeProfileClick();
 	void OnAddBotClick();
+	void AddCmdLineBots();
 	void OnAddBotClose(int result);
 	void OnOK();
 	void OnCancel();

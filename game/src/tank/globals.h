@@ -94,6 +94,7 @@ struct CmdLineOptions
 	std::string joinAddr;   // --join <addr[:port]> connect to a server
 	int autoReady;          // --autoready <n>     press Ready once <n> players are in the lobby
 	int bots;               // --bots <n>          add <n> bots after joining the lobby (host side test aid)
+	int botsAfter;          // --botsafter <n>     add the bots only once <n> humans are in the lobby
 	bool autoDrive;         // --autodrive         hold the W key down (test aid)
 	int fakeLag;            // --fakelag <ms>      delay outgoing control packets (test aid)
 };

@@ -1146,7 +1146,7 @@ void Level::AutoLatency(float dt, bool starved)
 	}
 	else
 	{
-		_autoLatencyStarve = __max(0.0f, _autoLatencyStarve - dt * 0.5f);
+		_autoLatencyStarve = __max(0.0f, _autoLatencyStarve - dt * 0.25f); // a single hiccup is forgotten within a second
 		// our packets were already waiting at the server on nearly every frame: the reserve is too big
 		if( g_client->GetLeading() > 0.9f )
 			_autoLatencyIdle += dt;
@@ -1161,15 +1161,15 @@ void Level::AutoLatency(float dt, bool starved)
 	int maxLatency = __max(1, g_conf.sv_fps.GetInt()); // one second of input delay at most
 	int newLatency = latency;
 
-	if( _autoLatencyStarve > 0.1f && latency < maxLatency )
+	if( _autoLatencyStarve > 0.2f && latency < maxLatency )
 	{
-		newLatency = latency + 1;          // 100 ms of waiting: add a packet right away
-		_autoLatencyHold = 1.0f;           // let the pipeline fill before judging again
+		newLatency = latency + 1;          // 200 ms of waiting for our own packets: add one
+		_autoLatencyHold = 1.5f;           // let the pipeline fill before judging again
 	}
-	else if( _autoLatencyIdle > 10.0f && latency > 0 )
+	else if( _autoLatencyIdle > 5.0f && latency > 0 )
 	{
-		newLatency = latency - 1;          // 10 s of being ahead: try a shorter delay
-		_autoLatencyHold = 6.0f;           // the server statistic spans about 4 s
+		newLatency = latency - 1;          // 5 s of being ahead: try a shorter delay
+		_autoLatencyHold = 5.0f;           // the server statistic spans about 4 s
 	}
 
 	if( newLatency != latency )

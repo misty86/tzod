@@ -413,6 +413,7 @@ void TankServer::SvPlayerReady(Peer *from, int task, const Variant &arg)
 
 void TankServer::SvAddBot(Peer *from, int task, const Variant &arg)
 {
+	TRACE("sv: bot '%s' added by %u", arg.Value<BotDesc>().pd.nick.c_str(), static_cast<PeerServer *>(from)->id);
 	PostType post(CL_POST_ADDBOT, arg);
 	for( PeerList::iterator it = _clients.begin(); it != _clients.end(); ++it )
 	{
